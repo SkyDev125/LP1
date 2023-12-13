@@ -116,11 +116,11 @@ test(relva_1) :-
             [A, B, C, D, E, r],
             [F, G, a, a, H, r],
             [I, J, K, L, M, r],
-            [N, a, O, P, a, r]],
+            [N, a, O, U, a, r]],
             [3, 0, 1, 1, 1, 1],
             [2, 1, 1, 1, 2, 0]
         ),
-    maplist(var, [X, Y, Z, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P]).
+    maplist(var, [X, Y, Z, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, U]).
 
 :- end_tests(relva).
 
@@ -152,12 +152,12 @@ test(aproveita_1) :-
             [a, r, r, r, r, r],
             [X, Y, Z, W, V, r],
             [U, T, a, a, S, r],
-            [R, Q, P, O, N, r],
+            [R, Q, E, O, N, r],
             [M, a, L, K, a, r]],
             [3, 0, 1, 1, 1, 1],
             [2, 1, 1, 1, 2, 0]
         ),
-    maplist(var, [X, Y, Z, W, V, U, T, S, R, Q, P, O, N, M, L, K]).
+    maplist(var, [X, Y, Z, W, V, U, T, S, R, Q, E, O, N, M, L, K]).
 
 :- end_tests(aproveita).
 
@@ -174,12 +174,12 @@ test(unicaHipotese_1) :-
             [a, r, r, r, r, r],
             [X, Y, r, Z, W, r],
             [V, t, a, a, U, r],
-            [T, S, r, R, Q, r],
-            [P, a, r, O, a, r]],
+            [F, S, r, R, Q, r],
+            [L, a, r, O, a, r]],
             [3, 0, 1, 1, 1, 1],
             [2, 1, 1, 1, 2, 0]
         ),
-    maplist(var, [X, Y, Z, W, V, U, T, S, R, Q, P, O]).
+    maplist(var, [X, Y, Z, W, V, U, F, S, R, Q, L, O]).
 
 :- end_tests(unicaHipotese).
 

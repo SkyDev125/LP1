@@ -73,7 +73,7 @@ todasCelulas(Board,Coords,Occupation):-
 
 /* Calcula Objectos Tabuleiro */
 
-% find the ammount of a determined element in the board.
+% find the ammount of a determined element in the board per line/col.
 calculaObjectosTabuleiro(Board, LineCounts, ColCounts, Occupation):-
     % Get the counts of each line.
     getCountsInLine(Board,LineCounts,Occupation),
@@ -165,8 +165,38 @@ withinBounds(MinLine, MaxLine, MinCol, MaxCol, (Line, Col)) :-
     Col >= MinCol, Col =< MaxCol.
 
 
-/* Insere Objecto Celula */
+/* Estrategias */
+
+% Fill all with Grass where col or line reached their limit
+relva((Board, LineTents, ColTents)):-
+    calculaObjectosTabuleiro(Board, LineCounts, ColCounts, t),
+    % Get the MaxSize of the Lines/Cols.
+    length(ColTents, LineLenght),
+    length(LineTents, ColLength),
+    % Get the Starting and End coordinates of the Line/Col to be Filled.
+    findFull(LineCounts,LineTents,LineLenght,FullLineCoords),
+    findFull(ColCounts,ColTents,ColLength,FullColCoords),
+    % Fill the Coordinates with grass if possible.
+    maplist(insereObjectoEntrePosicoesAux(Board, r),FullLineCoords),
+    transpose(Board, TransposedBoard),
+    maplist(insereObjectoEntrePosicoesAux(TransposedBoard, r),FullColCoords).
 
 
-start:- T = [[_, _, a, _], [_, _, _, _], [a, a, a, a], [_, _, a, _]],
-    insereObjectoEntrePosicoes(T, r, (1,1), (1,4)),write(T).
+% Aux function to find all full lines/Cols.
+findFull(LineCounts,LineTents,LineLenght,FullLineCoords):-
+    findall(
+        FullLineCoord, 
+        (
+            nth1(Index,LineCounts,LineCount),
+            nth1(Index,LineTents,LineCount),
+            FullLineCoord = [(Index,1),(Index,LineLenght)]
+        ),
+        FullLineCoords
+    ).
+
+% Auxiliary function to split the tuple into two coordinates
+insereObjectoEntrePosicoesAux(Board, Occupation, [StartCoord,EndCoord]) :-
+    insereObjectoEntrePosicoes(Board, Occupation, StartCoord, EndCoord).
+
+start:- puzzle(6-14, P),
+relva(P),write(P).
