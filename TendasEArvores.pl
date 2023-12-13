@@ -6,6 +6,7 @@
 % Segue-se o codigo
 
 % Get the neighboorhood of the coordinate.
+%
 % Copilot helped me with the #= operator for non instanciated variables.
 % So my code can be polimodal.
 vizinhanca((Line,Col),Coordinates):-
@@ -54,6 +55,7 @@ todasCelulas(Board,Cells):-
         Cells).
 
 % Get all coordinates of a specific element
+%
 % Copilot helped me formulate the if statement.
 todasCelulas(Board,Cells,Occupation):-
     findall(
@@ -95,42 +97,26 @@ getCountsInLine(Board,LineCounts,Occupation):-
 % Return True if cell is empty or grass, 
 % false otherwise (dont fail for outside of board)
 % Check if its out of bounds Linewise.
-celulaVazia(_, (Line, _)):-
-    Line =< 0.
-
-celulaVazia(Board, (Line, _)):-
-    length(Board, LineHeight),
-    Line >= LineHeight.
-
-% Check if its out of bounds ColWise.
-celulaVazia(_, (_, Col)):-
-    Col =< 0.
+%
+% Copilot gave me the Idea to add a withinBoard Function
+% But I decided to use it in a different way
+% To check the values negated! :p cause a negated and is an or with all negated!!!
+withinBoard(Board,(Line, Col)):-
+    Line >= 0,
+    Col >= 0,
+    length(Board,LineSize),
+    nth1(Line, Board, ExtLine),
+    Line =< LineSize,
+    length(ExtLine, ColSize),
+    Col =< ColSize.
 
 celulaVazia(Board, (Line, Col)):-
-    length(Board, LineHeight),
-    Line >= LineHeight,
-    nth1(Line, Board, ExtLine),
-    length(ExtLine, ColHeight),
-    Col >= ColHeight.
+    % Test the coords are inside the board first
+    (\+ withinBoard(Board,(Line, Col)); 
+    % Test the variable or grass situation
+        nth1(Line, Board, ExtLine),
+        nth1(Col, ExtLine, Cell),
+        (var(Cell); Cell = r)
+    ).
 
-% Check if its var (empty).
-celulaVazia(Board, (Line, Col)):-
-    length(Board, LineHeight),
-    Line >= LineHeight,
-    nth1(Line, Board, ExtLine),
-    length(ExtLine, ColHeight),
-    Col >= ColHeight,
-    nth1(Col, ExtLine, Cell),
-    var(Cell).
-
-% Check if its r (grass)
-celulaVazia(Board, (Line, Col)):- 
-    length(Board, LineHeight),
-    Line >= LineHeight,
-    nth1(Line, Board, ExtLine),
-    length(ExtLine, ColHeight),
-    Col >= ColHeight,
-    nth1(Col, ExtLine, Cell),
-    Cell = r.
-
-start :- puzzle(6-13, (T, _, _)), celulaVazia(T, (0, 5)), write(T).
+start :- puzzle(6-13, (T, _, _)), celulaVazia(T, (1, 7)), write(T).
