@@ -111,7 +111,7 @@ celulaVazia(Board, (Line, Col)):-
     % Test the variable or grass situation.
         getCell(Board, (Line, Col), Cell),
         (var(Cell); Cell = r)
-    ).
+    ),!.
 
 % Test if cell is inside board's bounds.
 withinBoard(Board,(Line, Col)):-
@@ -129,7 +129,7 @@ withinBoard(Board,(Line, Col)):-
 % Give a new occupation to the cell if not occupied already.
 insereObjectoCelula(Board, Occupation, (Line, Col)):-
     getCell(Board, (Line, Col), Cell),
-    (Cell = Occupation; true).
+    (Cell = Occupation; true),!.
 
 % Get the cell of the board.
 getCell(Board, (Line, Col), Cell):-
@@ -139,7 +139,7 @@ getCell(Board, (Line, Col), Cell):-
 % Give a new occupation to the cells if not occupied already.
 insereObjectoEntrePosicoes(Board, Occupation, (Line1, Col1), (Line2, Col2)):-
     filterCoords(Board,(Line1, Col1),(Line2,Col2), Coordinates),
-    maplist(insereObjectoCelula(Board, Occupation), Coordinates).
+    maplist(insereObjectoCelula(Board, Occupation), Coordinates),!.
 
 % Get the Coordinates of the cells
 % between two coordinates (Horizontally or Vertically)
