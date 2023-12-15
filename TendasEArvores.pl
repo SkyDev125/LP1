@@ -197,6 +197,3 @@ findFull(LineCounts,LineTents,LineLenght,FullLineCoords):-
 % Auxiliary function to split the tuple into two coordinates
 insereObjectoEntrePosicoesAux(Board, Occupation, [StartCoord,EndCoord]) :-
     insereObjectoEntrePosicoes(Board, Occupation, StartCoord, EndCoord).
-
-start:- puzzle(6-14, P),
-relva(P),write(P).
