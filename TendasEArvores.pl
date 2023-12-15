@@ -194,6 +194,34 @@ findFull(LineCounts,LineTents,LineLenght,FullLineCoords):-
         FullLineCoords
     ).
 
-% Auxiliary function to split the tuple into two coordinates
+% Auxiliary function to split the tuple into two coordinates for the function
 insereObjectoEntrePosicoesAux(Board, Occupation, [StartCoord,EndCoord]) :-
     insereObjectoEntrePosicoes(Board, Occupation, StartCoord, EndCoord).
+
+% Fill all the invalid spots with Grass
+inacessiveis(Board):-
+    % Get all neighboaring Coordinates to all trees
+    todasCelulas(Board,TreeCoords,a),
+    findall(
+        TreeNeigh,
+        (member(Coord,TreeCoords),vizinhanca(Coord,TreeNeigh)),
+        TreeNeighs
+    ),
+    flatten(TreeNeighs, FlatTreeNeighs),
+    % Exclude the Coordinates neighboaring trees.
+    todasCelulas(Board,AllCoords),
+    removeFromList(AllCoords,FlatTreeNeighs,FilteredCoords),
+    % Fill the remaining slots with Grass.
+    maplist(insereObjectoCelula(Board, r),FilteredCoords).
+
+% Remove List2 elements from List1
+removeFromList(List1,List2,FilteredList):-
+    findall(
+        FilteredItem,
+        (
+            member(FilteredItem,List1),
+            \+ member(FilteredItem,List2)
+        ),
+        FilteredList).
+
+start:- puzzle(6-14, (T, _, _)), inacessiveis(T),write(T).
