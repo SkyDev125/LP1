@@ -10,8 +10,8 @@
 
 % Get the neighboorhood of the coordinate.
 %
-% Copilot helped me with the #= operator for non instanciated variables.
-% So my code can be polimodal.
+% Copilot helped me with the #= operator for non instanciated variables
+% so my code can be polimodal.
 vizinhanca((Line,Col),Coordinates):-
     % Defining the variables.
     Line1 #= Line-1,
@@ -68,7 +68,8 @@ todasCelulas(Board,Coords,Occupation):-
             ),
         Coord = (Line,Col)
         ), 
-        Coords).
+        Coords
+    ).
 
 
 /* Calcula Objectos Tabuleiro */
@@ -146,7 +147,7 @@ insereObjectoEntrePosicoes(Board, Occupation, (Line1, Col1), (Line2, Col2)):-
 %
 % Copilot taught me about the min and max Functions.
 filterCoords(Board, (Line1, Col1), (Line2, Col2), FilteredCoords):-
-    % Find Max and Mins so it works with either
+    % Find Max and Mins so it works with either.
     MinLine is min(Line1, Line2),
     MaxLine is max(Line1,Line2),
     MinCol is min(Col1,Col2),
@@ -159,7 +160,7 @@ filterCoords(Board, (Line1, Col1), (Line2, Col2), FilteredCoords):-
         FilteredCoords
     ).
 
-% getCells Aux Function for filtering
+% getCells Aux Function for filtering.
 withinBounds(MinLine, MaxLine, MinCol, MaxCol, (Line, Col)) :-
     Line >= MinLine, Line =< MaxLine, 
     Col >= MinCol, Col =< MaxCol.
@@ -167,40 +168,40 @@ withinBounds(MinLine, MaxLine, MinCol, MaxCol, (Line, Col)) :-
 
 /* Estrategias */
 
-% Fill all with Grass where col or line reached their limit
-relva((Board, LineTents, ColTents)):-
+% Fill all with Grass where col or line reached their limit.
+relva((Board, LineCountTents, ColCountTents)):-
     calculaObjectosTabuleiro(Board, LineCounts, ColCounts, t),
     % Get the MaxSize of the Lines/Cols.
-    length(ColTents, LineLenght),
-    length(LineTents, ColLength),
-    % Get the Starting and End coordinates of the Line/Col to be Filled.
-    findFull(LineCounts,LineTents,LineLenght,FullLineCoords),
-    findFull(ColCounts,ColTents,ColLength,FullColCoords),
+    length(LineCountTents, ColLength),
+    length(ColCountTents, LineLenght),
+    % Get the Starting and E    	nd coordinates of the Line/Col to be Filled.
+    findSameWithCoords(LineCounts,LineCountTents,LineLenght,FullLineCoords),
+    findSameWithCoords(ColCounts,ColCountTents,ColLength,FullColCoords),
     % Fill the Coordinates with grass if possible.
     maplist(insereObjectoEntrePosicoesAux(Board, r),FullLineCoords),
     transpose(Board, TransposedBoard),
     maplist(insereObjectoEntrePosicoesAux(TransposedBoard, r),FullColCoords).
 
 
-% Aux function to find all full lines/Cols.
-findFull(LineCounts,LineTents,LineLenght,FullLineCoords):-
+% Aux function to find all Coords of full lines/Cols.
+findSameWithCoords(LineCounts,CheckLineCounts,LineLenght,LineCoords):-
     findall(
         FullLineCoord, 
         (
             nth1(Index,LineCounts,LineCount),
-            nth1(Index,LineTents,LineCount),
+            nth1(Index,CheckLineCounts,LineCount),
             FullLineCoord = [(Index,1),(Index,LineLenght)]
         ),
-        FullLineCoords
+        LineCoords
     ).
 
-% Auxiliary function to split the tuple into two coordinates for the function
+% Auxiliary function to split the tuple into two coordinates for the function.
 insereObjectoEntrePosicoesAux(Board, Occupation, [StartCoord,EndCoord]) :-
     insereObjectoEntrePosicoes(Board, Occupation, StartCoord, EndCoord).
 
-% Fill all the invalid spots with Grass
+% Fill all the invalid spots with Grass.
 inacessiveis(Board):-
-    % Get all neighboaring Coordinates to all trees
+    % Get all neighboaring Coordinates to all trees.
     todasCelulas(Board,TreeCoords,a),
     findall(
         TreeNeigh,
@@ -214,7 +215,7 @@ inacessiveis(Board):-
     % Fill the remaining slots with Grass.
     maplist(insereObjectoCelula(Board, r),FilteredCoords).
 
-% Remove List2 elements from List1
+% Remove List2 elements from List1.
 removeFromList(List1,List2,FilteredList):-
     findall(
         FilteredItem,
@@ -224,4 +225,103 @@ removeFromList(List1,List2,FilteredList):-
         ),
         FilteredList).
 
-start:- puzzle(6-14, (T, _, _)), inacessiveis(T),write(T).
+% Fill with tents where they are required to be placed.
+aproveita((Board, LineCountTents, ColCountTents)):-
+    % Get the MaxSize of the Lines/Cols.
+    length(LineCountTents, ColLength),
+    length(ColCountTents, LineLenght),
+    % Get empty or tent spaces.
+    calculaObjectosTabuleiro(Board, TentLineCounts, TentColCounts, t),
+    calculaObjectosTabuleiro(Board, EmptyLineCounts, EmptyColCounts, _),
+    % Add them together to get the total in each line and column of empty and tents.
+    sum_lists(TentLineCounts,EmptyLineCounts,AddedLineCounts),
+    sum_lists(TentColCounts,EmptyColCounts,AddedColCounts),
+    % Find the Cols and lines that have the same values with what's required.
+    findSameWithCoords(LineCountTents,AddedLineCounts,LineLenght,LineCoords),
+    findSameWithCoords(ColCountTents,AddedColCounts,ColLength,ColCoords),
+    % Fill The coordinates with tents where possible.
+    maplist(insereObjectoEntrePosicoesAux(Board, t),LineCoords),
+    transpose(Board,TransposedBoard),
+    maplist(insereObjectoEntrePosicoesAux(TransposedBoard, t),ColCoords).
+
+% Aux function to sum lists together for each value
+sum_lists(L1,L2,Values):-
+    findall(
+        Value,
+        (
+            nth1(Index,L1,Value1),
+            nth1(Index,L2,Value2),
+            Value is Value1 + Value2
+        ), 
+        Values
+    ).
+
+% Place grass around any tents where possible.
+limpaVizinhancas((Board, _, _)):-
+    % get all coordinates of tents
+    todasCelulas(Board,TentCoords,t),
+    % find all extended coordinates around tents
+    findall(
+        Coords,
+        (
+            member(TentCoord,TentCoords),
+            vizinhancaAlargada(TentCoord,Coords)
+        ), 
+        TentNeighCoords
+    ),
+    % Flatten, sort/remove duplicates and invalids from the neighboors list.
+    flatten(TentNeighCoords,FlatNeighCoords),
+    filterValidCoords(FlatNeighCoords,ValidNeighCoords),
+    % Place grass where possible in the neighboors.
+    maplist(insereObjectoCelula(Board, r),ValidNeighCoords).
+
+% Filter a list of coordinates with valid coordinates.
+filterValidCoords(Coords,SortedValidCoords):-
+    findall(
+        ValidCoord,
+        (
+            member(Coord,Coords),
+            \+ (Coord = (0,_) ; Coord = (_,0)),
+            ValidCoord = Coord
+        ),
+        UnsortedValidCoords
+    ),
+    sort(UnsortedValidCoords,SortedValidCoords).
+
+% Place a tent near a tree if there's only 1 empty slot and no tents.
+unicaHipotese((Board, _, _)):-
+    % get all coordinates of Trees.
+    todasCelulas(Board,TreeCoords,a),
+    % get all the neighboors of the trees.
+    findall(
+        Coords,
+        (
+            member(TreeCoord,TreeCoords),
+            vizinhanca(TreeCoord,Coords)
+        ), 
+        TreesNeighCoords
+    ),
+    % Find only the empty cells coordinates if there's only one.
+    findall(
+        OnlyCoord,
+        (
+            member(TreeNeighCoords, TreesNeighCoords),
+            todasCelulas([TreeNeighCoords],EmptyCoords,_),
+            length(EmptyCoords, EmptyNum),
+            EmptyNum =:= 1,
+            OnlyCoord = EmptyCoords
+        ),
+        OnlyCoords
+    ),
+    % Flatten, sort/remove duplicates and invalids from the neighboors list.
+    filterValidCoords(OnlyCoords,ValidOnlyCoords),
+    % Place the tents
+    maplist(insereObjectoCelula(Board, t),ValidOnlyCoords).
+
+start:- 
+    puzzle(6-14, P),
+    relva(P),
+    aproveita(P), 
+    relva(P),
+    unicaHipotese(P),
+    limpaVizinhancas(P),write(P).

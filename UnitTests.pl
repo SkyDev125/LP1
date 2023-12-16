@@ -214,25 +214,6 @@ test(limpaVizinhancas_1) :-
 
 :- end_tests(limpaVizinhancas).
 
-% Test for puzzle/1
-:- begin_tests(puzzle).
-test(puzzle_6_14) :-
-    puzzle(6-14, P), resolve(P),
-    assertion(P == (
-        [
-            [t,a,t,a,t,r],
-            [a,r,r,r,r,r],
-            [r,r,r,t,r,r],
-            [r,t,a,a,r,r],
-            [r,r,r,r,t,r],
-            [t,a,r,r,a,r]
-        ],
-        [3,0,1,1,1,1],
-        [2,1,1,1,2,0]
-    )).
-
-:- end_tests(puzzle).
-
 % Test for valida/2
 :- begin_tests(valida).
 test(valida_1) :-
@@ -254,9 +235,20 @@ test(puzzle_6_13) :-
     sol(6-13, P).
 
 test(puzzle_6_14) :-
-    puzzle(6-14, P),
-    resolve(P),
-    sol(6-14, P).
+    puzzle(6-14, P), resolve(P),
+    assertion(P == (
+        [
+            [t,a,t,a,t,r],
+            [a,r,r,r,r,r],
+            [r,r,r,t,r,r],
+            [r,t,a,a,r,r],
+            [r,r,r,r,t,r],
+            [t,a,r,r,a,r]
+        ],
+        [3,0,1,1,1,1],
+        [2,1,1,1,2,0]
+    )).
+    
 
 
 test(puzzle_8_1) :-
