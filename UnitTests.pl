@@ -1,13 +1,21 @@
 :- consult("TendasEArvores").
 
+% Helper predicate to count the number of variables in a nested list
+count_vars(List, Count) :-
+    flatten(List, FlatList),
+    include(var, FlatList, Vars),
+    length(Vars, Count).
+
 % Test for vizinhanca/2
 :- begin_tests(vizinhanca).
 test(vizinhanca_1) :-
     vizinhanca((3, 4), L),
+    assertion(maplist(nonvar, L)),
     assertion(L == [(2,4),(3,3),(3,5),(4,4)]).
 
 test(vizinhanca_2) :-
     vizinhanca((3, 1), L),
+    assertion(maplist(nonvar, L)),
     assertion(L == [(2,1),(3,0),(3,2),(4,1)]).
 
 :- end_tests(vizinhanca).
@@ -16,6 +24,7 @@ test(vizinhanca_2) :-
 :- begin_tests(vizinhancaAlargada).
 test(vizinhancaAlargada_1) :-
     vizinhancaAlargada((3, 4), L),
+    assertion(maplist(nonvar, L)),
     assertion(L == [(2,3),(2,4),(2,5),(3,3),(3,5),(4,3),(4,4),(4,5)]).
 
 :- end_tests(vizinhancaAlargada).
@@ -25,6 +34,7 @@ test(vizinhancaAlargada_1) :-
 test(todasCelulas_1) :-
     puzzle(6-13, (T, _, _)),
     todasCelulas(T, TodasCelulas),
+    assertion(maplist(nonvar, TodasCelulas)),
     assertion(TodasCelulas == [(1,1),(1,2),(1,3),(1,4),(1,5),(1,6),
                     (2,1),(2,2),(2,3),(2,4),(2,5),(2,6),
                     (3,1),(3,2),(3,3),(3,4),(3,5),(3,6),
@@ -39,6 +49,7 @@ test(todasCelulas_1) :-
 test(todasCelulas_with_object_1) :-
     puzzle(6-13, (T, _, _)),
     todasCelulas(T, TodasCelulas, a),
+    assertion(maplist(nonvar, TodasCelulas)),
     assertion(TodasCelulas == [(1,5),(2,1),(2,6),(3,4),(4,5),(5,3),(6,3)]).
 
 :- end_tests(todasCelulas_with_object).
@@ -48,12 +59,16 @@ test(todasCelulas_with_object_1) :-
 test(calculaObjectosTabuleiro_1) :-
     puzzle(6-13, (T, _, _)),
     calculaObjectosTabuleiro(T, CLinhas, CColunas, a),
+    assertion(maplist(nonvar, CLinhas)),
+    assertion(maplist(nonvar, CColunas)),
     assertion(CLinhas == [1,2,1,1,1,1]),
     assertion(CColunas == [1,0,2,1,2,1]).
 
 test(calculaObjectosTabuleiro_2) :-
     puzzle(6-13, (T, _, _)),
     calculaObjectosTabuleiro(T, CLinhas, CColunas, X),
+    assertion(maplist(nonvar, CLinhas)),
+    assertion(maplist(nonvar, CColunas)),
     assertion(CLinhas == [5,4,5,5,5,5]),
     assertion(CColunas == [5,6,4,5,4,5]).
 
@@ -84,14 +99,22 @@ test(celulaVazia_4) :-
 test(insereObjectoCelula_1) :-
     T = [[_, _, a, _], [_, _, _, _], [a, a, a, a], [_, _, a, _]],
     insereObjectoCelula(T, r, (1,1)),
-    assertion(T = [[r, X, a, Y], [Z, W, V, U], [a, a, a, a], [S, R, a, Q]]),
-    assertion(maplist(var, [X, Y, Z, W, V, U, S, R, Q])).
+    count_vars(T, CountAfter),
+    Expected = [[r, X, a, Y], [Z, W, V, U], [a, a, a, a], [S, R, a, Q]],
+    count_vars(Expected, ExpectedCount),
+    assertion(T = Expected),
+    assertion(maplist(var, [X, Y, Z, W, V, U, S, R, Q])),
+    assertion(CountAfter =:= ExpectedCount).
 
 test(insereObjectoCelula_2) :-
     T = [[_, _, a, _], [_, _, _, _], [a, a, a, a], [_, _, a, _]],
     insereObjectoCelula(T, r, (1,3)),
-    assertion(T = [[X, Y, a, Z], [W, V, U, J], [a, a, a, a], [S, R, a, Q]]),
-    assertion(maplist(var, [X, Y, Z, W, V, U, J, S, R, Q])).
+    Expected = [[X, Y, a, Z], [W, V, U, S], [a, a, a, a], [R, J, a, O]],
+    count_vars(Expected, ExpectedCount),
+    count_vars(T, CountAfter),
+    assertion(T = Expected),
+    assertion(maplist(var, [X, Y, Z, W, V, U, S, R, J, O])),
+    assertion(CountAfter =:= ExpectedCount).
 
 :- end_tests(insereObjectoCelula).
 
@@ -100,8 +123,12 @@ test(insereObjectoCelula_2) :-
 test(insereObjectoEntrePosicoes_1) :-
     T = [[_, _, a, _], [_, _, _, _], [a, a, a, a], [_, _, a, _]],
     insereObjectoEntrePosicoes(T, r, (1,1), (1,4)),
-    T = [[r, r, a, r], [X, Y, Z, W], [a, a, a, a], [V, U, a, J]],
-    assertion((maplist(var, [X, Y, Z, W, V, U, J]),T)).
+    count_vars(T, CountAfter),
+    Expected = [[r, r, a, r], [X, Y, Z, W], [a, a, a, a], [V, U, a, S]],
+    count_vars(Expected, ExpectedCount),
+    assertion(T = Expected),
+    assertion(maplist(var, [X, Y, Z, W, V, U, S])),
+    assertion(CountAfter =:= ExpectedCount).
 
 :- end_tests(insereObjectoEntrePosicoes).
 
@@ -110,7 +137,8 @@ test(insereObjectoEntrePosicoes_1) :-
 test(relva_1) :-
     puzzle(6-14, P),
     relva(P),
-    P = (
+    count_vars(P, CountAfter),
+    Expected = (
             [
                 [X, a, Y, a, Z, r],
                 [a, r, r, r, r, r],
@@ -122,7 +150,10 @@ test(relva_1) :-
             [3, 0, 1, 1, 1, 1],
             [2, 1, 1, 1, 2, 0]
         ),
-    assertion((maplist(var, [X, Y, Z, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, U]),P)).
+    count_vars(Expected, ExpectedCount),
+    assertion(P = Expected),
+    assertion(maplist(var, [X, Y, Z, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, U])),
+    assertion(CountAfter =:= ExpectedCount).
 
 :- end_tests(relva).
 
@@ -131,7 +162,8 @@ test(relva_1) :-
 test(inacessiveis_1) :-
     puzzle(6-14, (T, _, _)),
     inacessiveis(T),
-    T = [
+    count_vars(T, CountAfter),
+    Expected = [
             [X, a, Y, a, Z, r],
             [a, A, r, B, r, r],
             [C, r, D, E, r, r],
@@ -139,7 +171,10 @@ test(inacessiveis_1) :-
             [r, H, I, J, K, r],
             [L, a, M, N, a, O]
         ],
-    assertion((maplist(var, [X, Y, Z, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O]),T)).
+    count_vars(Expected, ExpectedCount),
+    assertion(T = Expected),
+    assertion(maplist(var, [X, Y, Z, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O])),
+    assertion(CountAfter =:= ExpectedCount).
 
 :- end_tests(inacessiveis).
 
@@ -149,7 +184,8 @@ test(aproveita_1) :-
     puzzle(6-14, P),
     relva(P),
     aproveita(P),
-    P = (
+    count_vars(P, CountAfter),
+    Expected = (
             [
                 [t, a, t, a, t, r],
                 [a, r, r, r, r, r],
@@ -161,7 +197,10 @@ test(aproveita_1) :-
             [3, 0, 1, 1, 1, 1],
             [2, 1, 1, 1, 2, 0]
         ),
-    assertion((maplist(var, [X, Y, Z, W, V, U, T, S, R, Q, E, O, N, M, L, K]),P)).
+    count_vars(Expected, ExpectedCount),
+    assertion(P = Expected),
+    assertion(maplist(var, [X, Y, Z, W, V, U, T, S, R, Q, E, O, N, M, L, K])),
+    assertion(CountAfter =:= ExpectedCount).
 
 :- end_tests(aproveita).
 
@@ -173,7 +212,8 @@ test(unicaHipotese_1) :-
     aproveita(P),
     relva(P),
     unicaHipotese(P),
-    P = (
+    count_vars(P, CountAfter),
+    Expected = (
             [
                 [t, a, t, a, t, r],
                 [a, r, r, r, r, r],
@@ -185,7 +225,10 @@ test(unicaHipotese_1) :-
             [3, 0, 1, 1, 1, 1],
             [2, 1, 1, 1, 2, 0]
         ),
-    assertion((maplist(var, [X, Y, Z, W, V, U, F, S, R, Q, L, O]),P)).
+    count_vars(Expected, ExpectedCount),
+    assertion(P = Expected),
+    assertion(maplist(var, [X, Y, Z, W, V, U, F, S, R, Q, L, O])),
+    assertion(CountAfter =:= ExpectedCount).
 
 :- end_tests(unicaHipotese).
 
@@ -198,7 +241,8 @@ test(limpaVizinhancas_1) :-
     relva(P),
     unicaHipotese(P),
     limpaVizinhancas(P),
-    P = (
+    count_vars(P, CountAfter),
+    Expected = (
             [
                 [t, a, t, a, t, r],
                 [a, r, r, r, r, r],
@@ -210,7 +254,10 @@ test(limpaVizinhancas_1) :-
             [3, 0, 1, 1, 1, 1],
             [2, 1, 1, 1, 2, 0]
         ),
-    assertion((maplist(var, [X, Y, Z, A, B, C, D]),P)).
+    count_vars(Expected, ExpectedCount),
+    assertion(P = Expected),
+    assertion(maplist(var, [X, Y, Z, A, B, C, D])),
+    assertion(CountAfter =:= ExpectedCount).
 
 :- end_tests(limpaVizinhancas).
 
@@ -235,21 +282,24 @@ test(puzzle_6_13) :-
     sol(6-13, P).
 
 test(puzzle_6_14) :-
-    puzzle(6-14, P), resolve(P),
-    assertion(P == (
-        [
-            [t,a,t,a,t,r],
-            [a,r,r,r,r,r],
-            [r,r,r,t,r,r],
-            [r,t,a,a,r,r],
-            [r,r,r,r,t,r],
-            [t,a,r,r,a,r]
-        ],
-        [3,0,1,1,1,1],
-        [2,1,1,1,2,0]
-    )).
-    
-
+    puzzle(6-14, P),
+    resolve(P),
+    count_vars(P, CountAfter),
+    Expected = (
+            [
+                [t, a, t, a, t, r],
+                [a, r, r, r, r, r],
+                [r, r, r, t, r, r],
+                [r, t, a, a, r, r],
+                [r, r, r, r, t, r],
+                [t, a, r, r, a, r]
+            ],
+            [3, 0, 1, 1, 1, 1],
+            [2, 1, 1, 1, 2, 0]
+        ),
+    count_vars(Expected, ExpectedCount),
+    assertion(P = Expected),
+    assertion(CountAfter =:= ExpectedCount).
 
 test(puzzle_8_1) :-
     puzzle(8-1, P),

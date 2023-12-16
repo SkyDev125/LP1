@@ -5,6 +5,201 @@
 % Atencao: nao deves copiar nunca os puzzles para o teu ficheiro de codigo
 % Segue-se o codigo
 
+/* Aux Functions */
+
+% Function to reduce code repetition.
+getCountsInLine(Board,LineCounts,Occupation):-
+    findall(
+        LineCount,
+        (
+            nth1(_,Board,ExtLine),
+            % Add [] to make the list inside of the list 
+            % so it works with todasCelulas/3.
+            todasCelulas([ExtLine],Cells,Occupation),
+            length(Cells, LineCount)
+        ),
+        LineCounts
+    ).
+
+
+% Test if cell is inside board's bounds.
+withinBoard(Board,(Line, Col)):-
+    Line >= 0,
+    Col >= 0,
+    length(Board,LineSize),
+    nth1(Line, Board, ExtLine),         
+    Line =< LineSize,
+    length(ExtLine, ColSize),
+    Col =< ColSize.
+
+
+% Get the cell of the board.
+getCell(Board, (Line, Col), Cell):-
+    nth1(Line, Board, ExtLine),
+    nth1(Col, ExtLine, Cell).
+
+
+% Get the cells of the board.
+getCells(Board, Coords, Cells):-
+    findall(
+        Cell,
+        (
+            member(Coord, Coords),
+            getCell(Board, Coord, Cell)
+        ),
+        Cells
+    ).
+
+
+% Get the Coordinates of the cells
+% between two coordinates (Horizontally or Vertically)
+%
+% Copilot taught me about the min and max Functions.
+filterCoords(Board, (Line1, Col1), (Line2, Col2), FilteredCoords):-
+    % Find Max and Mins so it works with either.
+    MinLine is min(Line1, Line2),
+    MaxLine is max(Line1,Line2),
+    MinCol is min(Col1,Col2),
+    MaxCol is max(Col1,Col2),
+    % Filter the cells we want.
+    todasCelulas(Board,CellCoords),
+    include(
+        withinBounds(MinLine, MaxLine, MinCol, MaxCol),
+        CellCoords,
+        FilteredCoords
+    ).
+
+
+% getCells Aux Function for filtering.
+withinBounds(MinLine, MaxLine, MinCol, MaxCol, (Line, Col)) :-
+    Line >= MinLine, Line =< MaxLine, 
+    Col >= MinCol, Col =< MaxCol.
+
+
+% Aux function to find all Coords of full lines/Cols.
+findSameWithCoords(LineCounts,CheckLineCounts,LineLenght,LineCoords):-
+    findall(
+        FullLineCoord, 
+        (
+            nth1(Index,LineCounts,LineCount),
+            nth1(Index,CheckLineCounts,LineCount),
+            FullLineCoord = [(Index,1),(Index,LineLenght)]
+        ),
+        LineCoords
+    ).
+
+
+% Auxiliary function to split the tuple into two coordinates for the function.
+insereObjectoEntrePosicoesAux(Board, Occupation, [StartCoord,EndCoord]) :-
+    insereObjectoEntrePosicoes(Board, Occupation, StartCoord, EndCoord).
+
+
+% Aux function to sum lists together for each value
+sum_lists(L1,L2,Values):-
+    findall(
+        Value,
+        (
+            nth1(Index,L1,Value1),
+            nth1(Index,L2,Value2),
+            Value is Value1 + Value2
+        ), 
+        Values
+    ).
+
+
+% Remove List2 elements from List1.
+removeFromList(List1,List2,FilteredList):-
+    findall(
+        FilteredItem,
+        (
+            member(FilteredItem,List1),
+            \+ member(FilteredItem,List2)
+        ),
+        FilteredList).
+
+
+% Filter a list of coordinates with valid coordinates.
+filterValidCoords(Coords,SortedValidCoords):-
+    findall(
+        ValidCoord,
+        (
+            member(Coord,Coords),
+            \+ (Coord = (0,_) ; Coord = (_,0)),
+            ValidCoord = Coord
+        ),
+        UnsortedValidCoords
+    ),
+    sort(UnsortedValidCoords,SortedValidCoords).
+
+
+% Controller function for CheckSingularParity, so it stops once it stagnates.
+checkSingularParityController(Trees, Tents, RemainingTrees, RemainingTents):-
+    % Call the function we are controlling the outputs of.
+    checkSingularParity(Trees, Tents, LeftOverTrees, LeftOverTents),
+    % Check if the outputs are the same as inputs
+    \+ (Trees == LeftOverTrees, Tents == LeftOverTents),
+    % Call the function again if the outputs arent stagnated yet.
+    checkSingularParityController(LeftOverTrees, LeftOverTents, RemainingTrees, RemainingTents).
+
+% End Clause for the controller, so it saves the values in the variables.
+checkSingularParityController(Trees, Tents, RemainingTrees, RemainingTents):-
+    checkSingularParity(Trees, Tents, LeftOverTrees, LeftOverTents),
+    Trees == LeftOverTrees,
+    Tents == LeftOverTents,
+    RemainingTrees = LeftOverTrees,
+    RemainingTents = LeftOverTents,
+    !.
+
+
+% End Clause for CheckSingularParity.
+checkSingularParity([],Tents, [], Tents):-!.
+
+% Passing Clause for CheckSingularParity.
+checkSingularParity([Tree|Trees], Tents, RemainingTrees, RemainingTents):-
+    vizinhanca(Tree, TreeNeigh),
+    removeFromList(Tents,TreeNeigh,LeftOverTents),
+    length(Tents, TentsAmmount),
+    length(LeftOverTents, LeftOverAmmount),
+    TentsAmmount-1 =:= LeftOverAmmount,
+    checkSingularParity(Trees, LeftOverTents, RemainingTrees, RemainingTents).
+
+% Failing Clause for CheckSingularParity.
+checkSingularParity([Tree|Trees], Tents, RemainingTrees, RemainingTents):-
+    checkSingularParity(Trees, Tents, RemainingTreesSol, RemainingTents),
+    append(RemainingTreesSol,[Tree],RemainingTrees).
+
+
+% Pair two lists together.
+pairLists(L1,L2,Pairs):-
+    findall(
+        Pair,
+        (
+            nth1(I,L1,L1Element),
+            nth1(I,L2,L2Element),
+            Pair = (L1Element,L2Element) 
+        ),
+        Pairs    
+    ).
+
+
+% Return the pairs with the elements requested.
+getPairsWithElements(Pairs, Element, RequestedPairs):-
+    findall(
+        RequestedPair,
+        (
+            % Get Pair from Pairs
+            member((Element1,Element2),Pairs),
+            % Check if Variable or element
+            (
+                var(Element) -> (var(Element1) ; var(Element2)) ;
+                (Element1 == Element ; Element2 == Element)
+            ),
+            % Save the element requested
+            RequestedPair = (Element1,Element2)
+        ),
+        RequestedPairs
+    ).
+
 
 /* Vizinhança */
 
@@ -24,6 +219,7 @@ vizinhanca((Line,Col),Coordinates):-
         (Line,Col2),    % Right.
         (Line2,Col)     % Bottom.
     ].
+
 
 % Get the Enlarged neighboorhood of the coordinate.
 vizinhancaAlargada((Line,Col),Coordinates):-
@@ -52,6 +248,7 @@ todasCelulas(Board,Coords):-
         Coord, 
         (nth1(Line,Board,ExtLine),nth1(Col,ExtLine,_),Coord = (Line,Col)), 
         Coords).
+
 
 % Get all coordinates of a specific element.
 %
@@ -83,20 +280,6 @@ calculaObjectosTabuleiro(Board, LineCounts, ColCounts, Occupation):-
     % Get the counts of each Collumn.
     getCountsInLine(TransposedBoard,ColCounts,Occupation).
 
-% Aux Function to reduce code repetition.
-getCountsInLine(Board,LineCounts,Occupation):-
-    findall(
-        LineCount,
-        (
-            nth1(_,Board,ExtLine),
-            % Add [] to make the list inside of the list 
-            % so it works with todasCelulas/3.
-            todasCelulas([ExtLine],Cells,Occupation),
-            length(Cells, LineCount)
-        ),
-        LineCounts
-    ).
-
 
 /* Celula Vazia */
 
@@ -114,16 +297,6 @@ celulaVazia(Board, (Line, Col)):-
         (var(Cell); Cell = r)
     ),!.
 
-% Test if cell is inside board's bounds.
-withinBoard(Board,(Line, Col)):-
-    Line >= 0,
-    Col >= 0,
-    length(Board,LineSize),
-    nth1(Line, Board, ExtLine),         
-    Line =< LineSize,
-    length(ExtLine, ColSize),
-    Col =< ColSize.
-
 
 /* Insere Objecto Celula */
 
@@ -132,38 +305,11 @@ insereObjectoCelula(Board, Occupation, (Line, Col)):-
     getCell(Board, (Line, Col), Cell),
     (Cell = Occupation; true),!.
 
-% Get the cell of the board.
-getCell(Board, (Line, Col), Cell):-
-    nth1(Line, Board, ExtLine),
-    nth1(Col, ExtLine, Cell).
 
 % Give a new occupation to the cells if not occupied already.
 insereObjectoEntrePosicoes(Board, Occupation, (Line1, Col1), (Line2, Col2)):-
     filterCoords(Board,(Line1, Col1),(Line2,Col2), Coordinates),
     maplist(insereObjectoCelula(Board, Occupation), Coordinates),!.
-
-% Get the Coordinates of the cells
-% between two coordinates (Horizontally or Vertically)
-%
-% Copilot taught me about the min and max Functions.
-filterCoords(Board, (Line1, Col1), (Line2, Col2), FilteredCoords):-
-    % Find Max and Mins so it works with either.
-    MinLine is min(Line1, Line2),
-    MaxLine is max(Line1,Line2),
-    MinCol is min(Col1,Col2),
-    MaxCol is max(Col1,Col2),
-    % Filter the cells we want.
-    todasCelulas(Board,CellCoords),
-    include(
-        withinBounds(MinLine, MaxLine, MinCol, MaxCol),
-        CellCoords,
-        FilteredCoords
-    ).
-
-% getCells Aux Function for filtering.
-withinBounds(MinLine, MaxLine, MinCol, MaxCol, (Line, Col)) :-
-    Line >= MinLine, Line =< MaxLine, 
-    Col >= MinCol, Col =< MaxCol.
 
 
 /* Estrategias */
@@ -183,22 +329,6 @@ relva((Board, LineCountTents, ColCountTents)):-
     maplist(insereObjectoEntrePosicoesAux(TransposedBoard, r),FullColCoords).
 
 
-% Aux function to find all Coords of full lines/Cols.
-findSameWithCoords(LineCounts,CheckLineCounts,LineLenght,LineCoords):-
-    findall(
-        FullLineCoord, 
-        (
-            nth1(Index,LineCounts,LineCount),
-            nth1(Index,CheckLineCounts,LineCount),
-            FullLineCoord = [(Index,1),(Index,LineLenght)]
-        ),
-        LineCoords
-    ).
-
-% Auxiliary function to split the tuple into two coordinates for the function.
-insereObjectoEntrePosicoesAux(Board, Occupation, [StartCoord,EndCoord]) :-
-    insereObjectoEntrePosicoes(Board, Occupation, StartCoord, EndCoord).
-
 % Fill all the invalid spots with Grass.
 inacessiveis(Board):-
     % Get all neighboaring Coordinates to all trees.
@@ -215,15 +345,6 @@ inacessiveis(Board):-
     % Fill the remaining slots with Grass.
     maplist(insereObjectoCelula(Board, r),FilteredCoords).
 
-% Remove List2 elements from List1.
-removeFromList(List1,List2,FilteredList):-
-    findall(
-        FilteredItem,
-        (
-            member(FilteredItem,List1),
-            \+ member(FilteredItem,List2)
-        ),
-        FilteredList).
 
 % Fill with tents where they are required to be placed.
 aproveita((Board, LineCountTents, ColCountTents)):-
@@ -244,17 +365,6 @@ aproveita((Board, LineCountTents, ColCountTents)):-
     transpose(Board,TransposedBoard),
     maplist(insereObjectoEntrePosicoesAux(TransposedBoard, t),ColCoords).
 
-% Aux function to sum lists together for each value
-sum_lists(L1,L2,Values):-
-    findall(
-        Value,
-        (
-            nth1(Index,L1,Value1),
-            nth1(Index,L2,Value2),
-            Value is Value1 + Value2
-        ), 
-        Values
-    ).
 
 % Place grass around any tents where possible.
 limpaVizinhancas((Board, _, _)):-
@@ -275,18 +385,6 @@ limpaVizinhancas((Board, _, _)):-
     % Place grass where possible in the neighboors.
     maplist(insereObjectoCelula(Board, r),ValidNeighCoords).
 
-% Filter a list of coordinates with valid coordinates.
-filterValidCoords(Coords,SortedValidCoords):-
-    findall(
-        ValidCoord,
-        (
-            member(Coord,Coords),
-            \+ (Coord = (0,_) ; Coord = (_,0)),
-            ValidCoord = Coord
-        ),
-        UnsortedValidCoords
-    ),
-    sort(UnsortedValidCoords,SortedValidCoords).
 
 % Place a tent near a tree if there's only 1 empty slot and no tents.
 unicaHipotese((Board, _, _)):-
@@ -305,11 +403,18 @@ unicaHipotese((Board, _, _)):-
     findall(
         OnlyCoord,
         (
+            % For all neighbours of trees get the cells.
             member(TreeNeighCoords, TreesNeighCoords),
-            todasCelulas([TreeNeighCoords],EmptyCoords,_),
-            length(EmptyCoords, EmptyNum),
-            EmptyNum =:= 1,
-            OnlyCoord = EmptyCoords
+            getCells(Board,TreeNeighCoords,TreeNeighCells),
+            % Create coord/cell pairs and get the pairs containing empty cells.
+            pairLists(TreeNeighCoords,TreeNeighCells,Pairs),
+            getPairsWithElements(Pairs, _, RequestedPairs),
+            % Check the Lenght of the pairs to only be 1.
+            length(RequestedPairs, PairsLenght),
+            PairsLenght =:= 1,
+            % Extract the coordinate from the pair and save it.
+            RequestedPairs = [(Coord,_)],
+            OnlyCoord = Coord
         ),
         OnlyCoords
     ),
@@ -318,10 +423,24 @@ unicaHipotese((Board, _, _)):-
     % Place the tents
     maplist(insereObjectoCelula(Board, t),ValidOnlyCoords).
 
-start:- 
-    puzzle(6-14, P),
-    relva(P),
-    aproveita(P), 
-    relva(P),
-    unicaHipotese(P),
-    limpaVizinhancas(P),write(P).
+
+valida(TreesList, TentsList):-
+    % Check the size of lists to make sure theres a 1-1 relationship.
+    length(TreesList,TreesAmmount),
+    length(TentsList, TentsAmmount),
+    TreesAmmount =:= TentsAmmount,
+    % Remove the tree-tent pairs from the list that are unique.
+    checkSingularParityController(TreesList,TentsList,RemainingTrees,RemainingTents),
+    % Check if there are no remaining Trees or Tents.
+    length(RemainingTrees, RemainingTreesAmmount),
+    length(RemainingTents, RemainingTentsAmmount),
+    RemainingTreesAmmount =:= 0,
+    RemainingTentsAmmount =:= 0.
+
+
+start:- puzzle(6-14, P),
+relva(P),
+aproveita(P),
+relva(P),
+unicaHipotese(P),write(P).
+
