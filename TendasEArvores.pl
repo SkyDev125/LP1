@@ -61,7 +61,7 @@ withinBoard(Board,(Line, Col)):-
     nth1(1, Board, FirstRow),
     length(FirstRow, ColSize),
     Line >= 1, Line =< LineSize,
-    Col >= 1, Col =< ColSize.
+    Col >= 1, Col =< ColSize. 
 
 /* List operations */
 
@@ -132,14 +132,14 @@ filterCoords(Board, (Line1, Col1), (Line2, Col2), FilteredCoords):-
     ).
 
 % Aux function to find all Coords of full lines/Cols.
-findSameWithCoords(LineCounts,CheckLineCounts,LineLenght,LineCoords):-
+findSameWithCoords(LineCounts,CheckLineCounts,LineLength,LineCoords):-
     findall(
         FullLineCoord, 
         (
             nth1(Index,LineCounts,LineCount),
             nth1(Index,CheckLineCounts,LineCount),
             % Create pairs of coordinates (start,end).
-            FullLineCoord = [(Index,1),(Index,LineLenght)]
+            FullLineCoord = [(Index,1),(Index,LineLength)]
         ),
         LineCoords
     ).
@@ -190,9 +190,9 @@ checkSingularParity([Tree|Trees], Tents, RemainingTrees, RemainingTents):-
     vizinhanca(Tree, TreeNeigh),
     removeFromList(Tents,TreeNeigh,LeftOverTents),
     % Verify if only one Tent was removed with this (remove tent-tree pair).
-    length(Tents, TentsAmmount),
-    length(LeftOverTents, LeftOverAmmount),
-    TentsAmmount-1 =:= LeftOverAmmount,
+    length(Tents, TentsAmount),
+    length(LeftOverTents, LeftOverAmount),
+    TentsAmount-1 =:= LeftOverAmount,
     checkSingularParity(Trees, LeftOverTents, RemainingTrees, RemainingTents).
 
 % Failing Clause for CheckSingularParity.
@@ -237,7 +237,7 @@ generateTentCoords(KnownTentCoords, NumTents, PossibleCoords, [(Line, Col)|RestT
 validCoord(KnownTentCoords, PossibleCoords, (X, Y)) :-
     % Check if it is in the list of possible coordinates.
     member((X, Y), PossibleCoords),
-    % Check if it isnt a member already known.
+    % Check if it isn't a member already known.
     \+ member((X, Y), KnownTentCoords),
     % Check if it is not in the extended neighborhood of any other tent.
     \+ (
@@ -259,7 +259,7 @@ checkSingularParityController(Trees, Tents, RemainingTrees, RemainingTents):-
     sort(Trees, SortedTrees),
     sort(Tents, SortedTents),
     \+ (SortedTrees == SortedLeftOverTrees, SortedTents == SortedLeftOverTents),
-    % Call the function again if the outputs arent stagnated yet.
+    % Call the function again if the outputs aren't stagnated yet.
     checkSingularParityController(LeftOverTrees, LeftOverTents, RemainingTrees, RemainingTents).
 
 % End Clause for the controller, so it saves the values in the variables.
@@ -286,7 +286,7 @@ applyStrategiesController(P):-
     count_vars(Board, CountBefore),
     applyStrategies(P),
     % Check if P can unify with P_Copy (it will most likely, due to "_" being in empty)
-    % So check if after unifying, the ammount of variables is different,
+    % So check if after unifying, the amount of variables is different,
     % Meaning the board Didn't stagnate yet, and we can reapply strategies.
     (P = P_Copy, count_vars(Board, CountAfter), CountBefore =:= CountAfter;
     % If the above is false, this occurs.
@@ -295,10 +295,10 @@ applyStrategiesController(P):-
 
 /* Vizinhanca */
 
-% Get the neighboorhood of the coordinate.
+% Get the neighborhood of the coordinate.
 %
-% Copilot helped me with the #= operator for non instanciated variables
-% so my code can be polimodal.
+% Copilot helped me with the #= operator for non instantiated variables
+% so my code can be poli-modal.
 vizinhanca((Line,Col),Coordinates):-
     % Defining the variables.
     Line1 #= Line-1,
@@ -312,7 +312,7 @@ vizinhanca((Line,Col),Coordinates):-
         (Line2,Col)     % Bottom.
     ].
 
-% Get the Enlarged neighboorhood of the coordinate.
+% Get the Enlarged neighborhood of the coordinate.
 vizinhancaAlargada((Line,Col),Coordinates):-
     % Defining the variables.
     Line1 #= Line-1,
@@ -363,21 +363,21 @@ todasCelulas(Board,Coords,Occupation):-
 
 /* Calcula Objectos Tabuleiro */
 
-% find the ammount of a determined element in the board per line/col.
+% find the amount of a determined element in the board per line/col.
 calculaObjectosTabuleiro(Board, LineCounts, ColCounts, Occupation):-
     % Get the counts of each line.
     getCountsInLine(Board,LineCounts,Occupation),
     % Transpose the Board to get the Columns as lines.
     transpose(Board, TransposedBoard),
-    % Get the counts of each Collumn.
+    % Get the counts of each Column.
     getCountsInLine(TransposedBoard,ColCounts,Occupation).
 
 
 /* Celula Vazia */
 
 % Return True if cell is empty or grass, 
-% false otherwise (dont fail for outside of board)
-% Check if its out of bounds Linewise.
+% false otherwise (don't fail for outside of board)
+% Check if its out of bounds Line-wise.
 %
 % Copilot gave me the Idea to add a withinBoard Function
 % But I decided to use it in a different way.
@@ -410,9 +410,9 @@ relva((Board, LineCountTents, ColCountTents)):-
     calculaObjectosTabuleiro(Board, LineCounts, ColCounts, t),
     % Get the MaxSize of the Lines/Cols.
     length(LineCountTents, ColLength),
-    length(ColCountTents, LineLenght),
+    length(ColCountTents, LineLength),
     % Get the Starting and End coordinates of the Line/Col to be Filled.
-    findSameWithCoords(LineCounts,LineCountTents,LineLenght,FullLineCoords),
+    findSameWithCoords(LineCounts,LineCountTents,LineLength,FullLineCoords),
     findSameWithCoords(ColCounts,ColCountTents,ColLength,FullColCoords),
     % Fill the Coordinates with grass if possible.
     maplist(insereObjectoEntrePosicoesAux(Board, r),FullLineCoords),
@@ -421,7 +421,7 @@ relva((Board, LineCountTents, ColCountTents)):-
 
 % Fill all the invalid spots with Grass.
 inacessiveis(Board):-
-    % Get all neighboaring Coordinates to all trees.
+    % Get all neighboring Coordinates to all trees.
     todasCelulas(Board,TreeCoords,a),
     findall(
         TreeNeigh,
@@ -429,7 +429,7 @@ inacessiveis(Board):-
         TreeNeighs
     ),
     flatten(TreeNeighs, FlatTreeNeighs),
-    % Exclude the Coordinates neighboaring trees.
+    % Exclude the Coordinates neighboring trees.
     todasCelulas(Board,AllCoords),
     removeFromList(AllCoords,FlatTreeNeighs,FilteredCoords),
     % Fill the remaining slots with Grass.
@@ -439,7 +439,7 @@ inacessiveis(Board):-
 aproveita((Board, LineCountTents, ColCountTents)):-
     % Get the MaxSize of the Lines/Cols.
     length(LineCountTents, ColLength),
-    length(ColCountTents, LineLenght),
+    length(ColCountTents, LineLength),
     % Get empty or tent spaces.
     calculaObjectosTabuleiro(Board, TentLineCounts, TentColCounts, t),
     calculaObjectosTabuleiro(Board, EmptyLineCounts, EmptyColCounts, _),
@@ -447,7 +447,7 @@ aproveita((Board, LineCountTents, ColCountTents)):-
     sum_lists(TentLineCounts,EmptyLineCounts,AddedLineCounts),
     sum_lists(TentColCounts,EmptyColCounts,AddedColCounts),
     % Find the Cols and lines that have the same values with what's required.
-    findSameWithCoords(LineCountTents,AddedLineCounts,LineLenght,LineCoords),
+    findSameWithCoords(LineCountTents,AddedLineCounts,LineLength,LineCoords),
     findSameWithCoords(ColCountTents,AddedColCounts,ColLength,ColCoords),
     % Fill The coordinates with tents where possible.
     maplist(insereObjectoEntrePosicoesAux(Board, t),LineCoords),
@@ -467,17 +467,17 @@ limpaVizinhancas((Board, _, _)):-
         ), 
         TentNeighCoords
     ),
-    % Flatten, sort/remove duplicates and invalids from the neighboors list.
+    % Flatten, sort/remove duplicates and invalids from the neighbors list.
     flatten(TentNeighCoords,FlatNeighCoords),
     filterValidCoords(Board,FlatNeighCoords,ValidNeighCoords),
-    % Place grass where possible in the neighboors.
+    % Place grass where possible in the neighbors.
     maplist(insereObjectoCelula(Board, r),ValidNeighCoords).
 
 % Place a tent near a tree if there's only 1 empty slot and no tents.
 unicaHipotese((Board, _, _)):-
     % get all coordinates of Trees.
     todasCelulas(Board,TreeCoords,a),
-    % get all the neighboors of the trees.
+    % get all the neighbors of the trees.
     findall(
         Coords,
         (
@@ -490,17 +490,18 @@ unicaHipotese((Board, _, _)):-
     findall(
         OnlyCoord,
         (
-            % For all neighbours of trees get the cells.
+            % Get the cells of all Tree Neighbors.
             member(TreeNeighCoords, TreesNeighCoords),
-            getCells(Board,TreeNeighCoords,TreeNeighCells),
+            filterValidCoords(Board, TreeNeighCoords,ValidTreesNeighCoords),
+            getCells(Board,ValidTreesNeighCoords,TreeNeighCells),
             % Create coord/cell pairs and get the pairs containing empty cells.
-            pairLists(TreeNeighCoords,TreeNeighCells,Pairs),
+            pairLists(ValidTreesNeighCoords,TreeNeighCells,Pairs),
             getPairsWithElements(Pairs, _, RequestedPairs),
             % Make sure there are no tents already near the tree.
             getPairsWithElements(Pairs, t, TentPairs),
             length(TentPairs, TentPairsLength),
             TentPairsLength =:= 0,
-            % Check the Lenght of the pairs to only be 1.
+            % Check the Length of the pairs to only be 1.
             length(RequestedPairs, PairsLength),
             PairsLength =:= 1,
             % Extract the coordinate from the pair and save it.
@@ -509,25 +510,22 @@ unicaHipotese((Board, _, _)):-
         ),
         OnlyCoords
     ),
-    % Flatten, sort/remove duplicates and invalids from the neighboors list.
-    filterValidCoords(Board, OnlyCoords,ValidOnlyCoords),
-    % Place the tents.
-    maplist(insereObjectoCelula(Board, t),ValidOnlyCoords).
+    maplist(insereObjectoCelula(Board, t),OnlyCoords).
 
 
 /* Final Functions */
 
 valida(TreesList, TentsList):-
     % Check the size of lists to make sure theres a 1-1 relationship.
-    length(TreesList,TreesAmmount),
-    length(TentsList, TentsAmmount),
-    TreesAmmount =:= TentsAmmount,
+    length(TreesList,TreesAmount),
+    length(TentsList, TentsAmount),
+    TreesAmount =:= TentsAmount,
     % Remove the tree-tent pairs from the list that are unique.
     checkSingularParityController(TreesList,TentsList,RemainingTrees,RemainingTents),
     % Check if the remaining lists are empty and succeed
     ((RemainingTrees = [], RemainingTents = []) ;
     % Else Check if the remaining coordinates are a circular chain
-    % Remove the first tree and a tent from its neigbourhood
+    % Remove the first tree and a tent from its neighborhood
     % To tests if it is a circular chain
     RemainingTrees = [FirstTree|LeftOverTrees],
     vizinhanca((FirstTree), TreeNeigh),
@@ -536,7 +534,7 @@ valida(TreesList, TentsList):-
     checkSingularParityController(LeftOverTrees, LeftOverTents, FinalTrees, FinalTents),
     % If there are still trees or tents left after removing the circular chain,
     % the initial configuration was invalid.
-    (FinalTrees = [], FinalTents = [])).
+    (FinalTrees = [], FinalTents = [])).  
 
 % Prolog Trial and error Solving Function
 resolve(P):-
