@@ -535,16 +535,14 @@ unicaHipotese((Board, _, _)):-
 /* Final Functions */
 
 valida(TreesList, TentsList):-
-        % Check the size of lists to make sure theres a 1-1 relationship.
+    % Check the size of lists to make sure theres a 1-1 relationship.
     length(TreesList,TreesAmount),
     length(TentsList, TentsAmount),
     TreesAmount =:= TentsAmount,
     % Check if there are any intersections between trees and tents coords.
-
     intersection(TreesList, TentsList, Intersections),
     length(Intersections,IntersectionsAmount),
     IntersectionsAmount =:= 0,
-
     % Remove the tree-tent pairs from the list that are unique,
     % And Check for circular Chains.
     checkCircularChainController(TreesList,TentsList).  
