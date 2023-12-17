@@ -55,17 +55,13 @@ withinBounds(MinLine, MaxLine, MinCol, MaxCol, (Line, Col)) :-
     Line >= MinLine, Line =< MaxLine, 
     Col >= MinCol, Col =< MaxCol.
 
-
 % Verify if cell is inside board's bounds.
-%
-% Copilot Showed me the between function.
 withinBoard(Board,(Line, Col)):-
     length(Board,LineSize),
     nth1(1, Board, FirstRow),
     length(FirstRow, ColSize),
-    between(1, LineSize, Line),
-    between(1, ColSize, Col).
-
+    Line >= 1, Line =< LineSize,
+    Col >= 1, Col =< ColSize.
 
 /* List operations */
 
@@ -518,7 +514,6 @@ valida(TreesList, TentsList):-
     RemainingTreesAmmount =:= 0,
     RemainingTentsAmmount =:= 0,
     !.
-
 
 % Prolog Trial and error Solving Function
 resolve(P):-
