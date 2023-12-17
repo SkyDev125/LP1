@@ -1,4 +1,6 @@
-% Escrever aqui o numero e o nome do aluno
+% Author: Diogo Santos
+% Num:    110262
+% Date:   17/12/2023
 :- use_module(library(clpfd)). % para poder usar transpose/2
 :- set_prolog_flag(answer_write_options,[max_depth(0)]). % ver listas completas
 :- ["Testes.pl"]. % Ficheiro dado. No Mooshak tera mais puzzles.
