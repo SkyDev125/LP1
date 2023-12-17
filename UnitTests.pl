@@ -60,7 +60,7 @@ test(calculaObjectosTabuleiro_1) :-
 
 test(calculaObjectosTabuleiro_2) :-
     puzzle(6-13, (T, _, _)),
-    calculaObjectosTabuleiro(T, CLinhas, CColunas, X),
+    calculaObjectosTabuleiro(T, CLinhas, CColunas, _),
     assertion(maplist(nonvar, CLinhas)),
     assertion(maplist(nonvar, CColunas)),
     assertion(CLinhas == [5,4,5,5,5,5]),
@@ -301,6 +301,41 @@ test(valida_4) :-
             ],
     assertion(valida(Trees, Tents)).
 
+test(valida_5) :-
+    Trees = [
+                (1,2),(1,6),
+                (2,1),(2,3),(2,5),(2,7),
+                (3,2),(3,6),
+                
+                (5,2),(5,4),(5,6),
+                (6,1),(6,7),
+                (7,2),(7,4),(7,6)
+            ],
+    Tents = [
+                (1,1),(1,3),(1,5),(1,7),
+                
+                (3,1),(3,3),(3,5),(3,7),
+
+                (5,1),(5,3),(5,5),(5,7),
+
+                (7,1),(7,3),(7,5),(7,7)
+            ],
+    assertion(valida(Trees, Tents)).
+
+test(valida_6) :-
+    Trees = [(1,1),(1,3)],
+    Tents = [(1,1),(1,3)],
+    assertion(\+ valida(Trees, Tents)).
+
+test(valida_7) :-
+    Trees = [(1,1),(1,4)],
+    Tents = [(1,2),(1,4)],
+    assertion(\+ valida(Trees, Tents)).
+
+test(valida_8) :-
+    Trees = [(1,2),(2,1),(2,3),(3,2)],
+    Tents = [(1,1),(1,3),(3,1),(3,3)],
+    assertion(valida(Trees, Tents)).
 
 :- end_tests(valida).
 
