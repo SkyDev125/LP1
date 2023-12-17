@@ -275,6 +275,7 @@ checkSingularParityController(Trees, Tents, RemainingTrees, RemainingTents):-
     % Save the Leftovers
     RemainingTrees = SortedLeftOverTrees,
     RemainingTents = SortedLeftOverTents,
+    % Prevent Backtracking.
     !.
 
 % Controller of CheckCircularChain
@@ -571,4 +572,5 @@ resolve(P):-
     valida(TreeCoords,TentCoordstest),
     % Fill the rest with Grass to finish it.
     relva(P),
+    % Prevent Backtracking.
     !.
