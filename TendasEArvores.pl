@@ -490,7 +490,6 @@ valida(TreesList, TentsList):-
 
 % Generate a single valid coordinate.
 validCoord(P, KnownTentCoords, (X, Y), PossibleCoords) :-
-    P = (_, ExpectedTentsLines, ExpectedTentsColumns),
     % Check if it is in the list of possible coordinates.
     member((X, Y), PossibleCoords),
     % Check if it isnt a member already known.
