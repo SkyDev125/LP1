@@ -3,7 +3,7 @@
 % Date:   17/12/2023
 :- use_module(library(clpfd)). % para poder usar transpose/2
 :- set_prolog_flag(answer_write_options,[max_depth(0)]). % ver listas completas
-:- ["Testes.pl"]. % Ficheiro dado. No Mooshak tera mais puzzles.
+:- ["puzzlesAcampar.pl"]. % Ficheiro dado. No Mooshak tera mais puzzles.
 % Atencao: nao deves copiar nunca os puzzles para o teu ficheiro de codigo
 % Segue-se o codigo
 
