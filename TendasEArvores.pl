@@ -489,7 +489,7 @@ valida(TreesList, TentsList):-
     RemainingTentsAmmount =:= 0.
 
 % Generate a single valid coordinate.
-validCoord(P, KnownTentCoords, TreeCoords, (X, Y), PossibleCoords) :-
+validCoord(P, KnownTentCoords, (X, Y), PossibleCoords) :-
     P = (_, ExpectedTentsLines, ExpectedTentsColumns),
     % Check if it is in the list of possible coordinates.
     member((X, Y), PossibleCoords),
@@ -503,32 +503,47 @@ validCoord(P, KnownTentCoords, TreeCoords, (X, Y), PossibleCoords) :-
     ).
 
 % Recursive predicate to generate tent coordinates
-generateTentCoords(_, _, _, 0, [], _).
-generateTentCoords(P, TreeCoords, KnownTentCoords, NumTents, [(Line, Col)|RestTentCoords], PossibleCoords):-
+generateTentCoords(_, _, 0, [], _).
+generateTentCoords(P, KnownTentCoords, NumTents, [(Line, Col)|RestTentCoords], PossibleCoords):-
     NumTents > 0,
-    validCoord(P, KnownTentCoords, TreeCoords, (Line, Col), PossibleCoords),
+    validCoord(P, KnownTentCoords, (Line, Col), PossibleCoords),
     NewNumTents is NumTents - 1,
     append(KnownTentCoords, [(Line, Col)], NewKnownTentCoords),
-    generateTentCoords(P, TreeCoords, NewKnownTentCoords, NewNumTents, RestTentCoords, PossibleCoords).
+    generateTentCoords(P, NewKnownTentCoords, NewNumTents, RestTentCoords, PossibleCoords).
 
 % Prolog Trial and error Solving Function
 resolve(P):-
-    P = (Board,_,_),
+    P = (Board,ExpectedLineCounts,ExpectedColCounts),
     applyStrategiesController(P),
     todasCelulas(Board,TreeCoords,a),
     todasCelulas(Board,KnownTentCoords,t),
     todasCelulas(Board,PossibleCoords,_),
     % Get size of Tree coordinates
     length(TreeCoords, NumTrees),
+    length(KnownTentCoords, NumKnownTents),
+    TentNum is NumTrees - NumKnownTents,
     % Generate the unknown tent coordinates
-    generateTentCoords(P, TreeCoords, KnownTentCoords, NumTrees, UnknownTentCoords, PossibleCoords),
-    append(UnknownTentCoords, KnownTentCoords, TentCoords),
-    length(TentCoords, NumTrees),
-    writeln(TentCoords),  % Print out the full list of tent coordinates
+    generateTentCoords(P, KnownTentCoords, TentNum, TentCoords, PossibleCoords),
+    append(KnownTentCoords,TentCoords,TentCoordstest),
+    writeln(TentCoordstest),  % Print out the full list of tent coordinates
     % Validate
-    valida(TreeCoords, TentCoords),
-    maplist(insereObjectoCelula(Board,t),TentCoords),
+    %valida(TreeCoords, TentCoords),
+    maplist(insereObjectoCelula(Board,t),TentCoordstest),
+    calculaObjectosTabuleiro(Board, LineCounts, ColCounts, t),
+    LineCounts == ExpectedLineCounts,
+    ColCounts == ExpectedColCounts,
+    valida(TreeCoords,TentCoordstest),
     relva(P).
 
-start:- puzzle(6-13, P),
+start:- P = (
+    [
+        [a,_,_,_,_,_],
+        [_,_,_,a,_,a],
+        [a,_,_,_,_,_],
+        [a,_,_,_,a,_],
+        [_,a,_,_,_,_],
+        [_,_,_,a,_,_]
+    ],
+    [2,0,2,1,2,1],
+    [1,2,1,1,1,2]),
 resolve(P), write(P).
