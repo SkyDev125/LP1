@@ -489,7 +489,7 @@ valida(TreesList, TentsList):-
     RemainingTentsAmmount =:= 0.
 
 % Generate a single valid coordinate.
-validCoord(P, KnownTentCoords, (X, Y), PossibleCoords) :-
+validCoord(KnownTentCoords, PossibleCoords, (X, Y)) :-
     % Check if it is in the list of possible coordinates.
     member((X, Y), PossibleCoords),
     % Check if it isnt a member already known.
@@ -502,13 +502,13 @@ validCoord(P, KnownTentCoords, (X, Y), PossibleCoords) :-
     ).
 
 % Recursive predicate to generate tent coordinates
-generateTentCoords(_, _, 0, [], _).
-generateTentCoords(P, KnownTentCoords, NumTents, [(Line, Col)|RestTentCoords], PossibleCoords):-
+generateTentCoords(_, 0, _, []).
+generateTentCoords(KnownTentCoords, NumTents, PossibleCoords, [(Line, Col)|RestTentCoords]):-
     NumTents > 0,
-    validCoord(P, KnownTentCoords, (Line, Col), PossibleCoords),
+    validCoord(KnownTentCoords, PossibleCoords, (Line, Col)),
     NewNumTents is NumTents - 1,
     append(KnownTentCoords, [(Line, Col)], NewKnownTentCoords),
-    generateTentCoords(P, NewKnownTentCoords, NewNumTents, RestTentCoords, PossibleCoords).
+    generateTentCoords(NewKnownTentCoords, NewNumTents, PossibleCoords, RestTentCoords).
 
 % Prolog Trial and error Solving Function
 resolve(P):-
@@ -522,7 +522,7 @@ resolve(P):-
     length(KnownTentCoords, NumKnownTents),
     TentNum is NumTrees - NumKnownTents,
     % Generate the unknown tent coordinates
-    generateTentCoords(P, KnownTentCoords, TentNum, TentCoords, PossibleCoords),
+    generateTentCoords(KnownTentCoords, TentNum, PossibleCoords, TentCoords),
     append(KnownTentCoords,TentCoords,TentCoordstest),
     writeln(TentCoordstest),  % Print out the full list of tent coordinates
     % Validate

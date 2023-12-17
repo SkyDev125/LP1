@@ -286,24 +286,7 @@ test(puzzle_6_13) :-
 test(puzzle_6_14) :-
     puzzle(6-14, P),
     resolve(P),
-    P = (Board, _, _),
-    count_vars(Board, CountAfter),
-    Expected = (
-            [
-                [t, a, t, a, t, r],
-                [a, r, r, r, r, r],
-                [r, r, r, t, r, r],
-                [r, t, a, a, r, r],
-                [r, r, r, r, t, r],
-                [t, a, r, r, a, r]
-            ],
-            [3, 0, 1, 1, 1, 1],
-            [2, 1, 1, 1, 2, 0]
-        ),
-    Expected = (ExpectedBoard, _, _),
-    count_vars(ExpectedBoard, ExpectedCount),
-    assertion(P = Expected),
-    assertion(CountAfter =:= ExpectedCount).
+    sol(6-14, P).
 
 test(puzzle_8_1) :-
     puzzle(8-1, P),
