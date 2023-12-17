@@ -39,6 +39,13 @@ getCells(Board, Coords, Cells):-
         Cells
     ).
 
+% Helper predicate to count the number of variables in a nested list
+count_vars(List, Count) :-
+    flatten(List, FlatList),
+    include(var, FlatList, Vars),
+    length(Vars, Count).
+
+
 /* Check Bounds Functions */
 
 % Verify if a pair of coordinates is within bounds.
@@ -46,15 +53,16 @@ withinBounds(MinLine, MaxLine, MinCol, MaxCol, (Line, Col)) :-
     Line >= MinLine, Line =< MaxLine, 
     Col >= MinCol, Col =< MaxCol.
 
+
 % Verify if cell is inside board's bounds.
+%
+% Copilot Showed me the between function.
 withinBoard(Board,(Line, Col)):-
-    Line >= 0,
-    Col >= 0,
     length(Board,LineSize),
-    nth1(Line, Board, ExtLine),         
-    Line =< LineSize,
-    length(ExtLine, ColSize),
-    Col =< ColSize.
+    nth1(1, Board, FirstRow),
+    length(FirstRow, ColSize),
+    between(1, LineSize, Line),
+    between(1, ColSize, Col).
 
 
 /* List operations */
@@ -128,13 +136,12 @@ findSameWithCoords(LineCounts,CheckLineCounts,LineLenght,LineCoords):-
     ).
 
 % Filter a list of coordinates with valid coordinates.
-filterValidCoords(Coords,SortedValidCoords):-
+filterValidCoords(Board,Coords,SortedValidCoords):-
     findall(
         ValidCoord,
         (
             member(Coord,Coords),
-            % Fail if any of the following is true.
-            \+ (Coord = (0,_) ; Coord = (_,0)),
+            withinBoard(Board, Coord),
             % Store the remaining Coords.
             ValidCoord = Coord
         ),
@@ -190,6 +197,19 @@ insereObjectoEntrePosicoesAux(Board, Occupation, [StartCoord,EndCoord]) :-
     insereObjectoEntrePosicoes(Board, Occupation, StartCoord, EndCoord).
 
 
+/* Strategy Functions */
+
+% Apply All strategies
+applyStrategies(P):-
+    % Get the board for inacessiveis to work
+    P = (Board,_,_),
+    relva(P),
+    inacessiveis(Board),
+    aproveita(P),
+    unicaHipotese(P),
+    limpaVizinhancas(P).
+
+
 /* Function Controllers for Recursions */
 
 % Controller function for CheckSingularParity, so it stops once it stagnates.
@@ -197,7 +217,11 @@ checkSingularParityController(Trees, Tents, RemainingTrees, RemainingTents):-
     % Call the function we are controlling the outputs of.
     checkSingularParity(Trees, Tents, LeftOverTrees, LeftOverTents),
     % Check if the outputs are the same as inputs
-    \+ (Trees == LeftOverTrees, Tents == LeftOverTents),
+    sort(LeftOverTrees, SortedLeftOverTrees),
+    sort(LeftOverTents, SortedLeftOverTents),
+    sort(Trees, SortedTrees),
+    sort(Tents, SortedTents),
+    \+ (SortedTrees == SortedLeftOverTrees, SortedTents == SortedLeftOverTents),
     % Call the function again if the outputs arent stagnated yet.
     checkSingularParityController(LeftOverTrees, LeftOverTents, RemainingTrees, RemainingTents).
 
@@ -209,6 +233,21 @@ checkSingularParityController(Trees, Tents, RemainingTrees, RemainingTents):-
     RemainingTrees = LeftOverTrees,
     RemainingTents = LeftOverTents,
     !.
+
+% Controller function for ApplyStrategies, so it stops once it stagnates.
+applyStrategiesController(P):-
+    % Create a copy of the board to verify later
+    copy_term(P, P_Copy),
+    P_Copy = (Board,_,_),
+    % Count the vars before applying strategies
+    count_vars(Board, CountBefore),
+    applyStrategies(P),
+    % Check if P can unify with P_Copy (it will most likely, due to "_" being in empty)
+    % So check if after unifying, the ammount of variables is different,
+    % Meaning the board Didn't stagnate yet, and we can reapply strategies.
+    (P = P_Copy, count_vars(Board, CountAfter), CountBefore =:= CountAfter;
+    % If the above is false, this occurs.
+    applyStrategiesController(P)).
 
 
 /* Vizinhança */
@@ -387,7 +426,7 @@ limpaVizinhancas((Board, _, _)):-
     ),
     % Flatten, sort/remove duplicates and invalids from the neighboors list.
     flatten(TentNeighCoords,FlatNeighCoords),
-    filterValidCoords(FlatNeighCoords,ValidNeighCoords),
+    filterValidCoords(Board,FlatNeighCoords,ValidNeighCoords),
     % Place grass where possible in the neighboors.
     maplist(insereObjectoCelula(Board, r),ValidNeighCoords).
 
@@ -414,9 +453,13 @@ unicaHipotese((Board, _, _)):-
             % Create coord/cell pairs and get the pairs containing empty cells.
             pairLists(TreeNeighCoords,TreeNeighCells,Pairs),
             getPairsWithElements(Pairs, _, RequestedPairs),
+            % Make sure there are no tents already near the tree.
+            getPairsWithElements(Pairs, t, TentPairs),
+            length(TentPairs, TentPairsLength),
+            TentPairsLength =:= 0,
             % Check the Lenght of the pairs to only be 1.
-            length(RequestedPairs, PairsLenght),
-            PairsLenght =:= 1,
+            length(RequestedPairs, PairsLength),
+            PairsLength =:= 1,
             % Extract the coordinate from the pair and save it.
             RequestedPairs = [(Coord,_)],
             OnlyCoord = Coord
@@ -424,7 +467,7 @@ unicaHipotese((Board, _, _)):-
         OnlyCoords
     ),
     % Flatten, sort/remove duplicates and invalids from the neighboors list.
-    filterValidCoords(OnlyCoords,ValidOnlyCoords),
+    filterValidCoords(Board, OnlyCoords,ValidOnlyCoords),
     % Place the tents.
     maplist(insereObjectoCelula(Board, t),ValidOnlyCoords).
 
@@ -445,10 +488,48 @@ valida(TreesList, TentsList):-
     RemainingTreesAmmount =:= 0,
     RemainingTentsAmmount =:= 0.
 
+% Generate a single valid coordinate.
+validCoord(Board, KnownTentCoords, TreeCoords, (X, Y)) :-
+    % Check if it is inside the board.
+    withinBoard(Board, (X, Y)),
+    % Check if it isnt a member already known.
+    \+ member((X, Y), KnownTentCoords),
+    % Check if it is not a tree.
+    \+ member((X, Y), TreeCoords),
+    % Check if it is in the neighborhood of a tree.
+    member((TreeX, TreeY), TreeCoords),
+    vizinhanca((TreeX, TreeY), Neighbors),
+    member((X, Y), Neighbors).
 
-start:- puzzle(6-14, P),
-relva(P),
-aproveita(P),
-relva(P),
-unicaHipotese(P),write(P).
+% Recursive predicate to generate tent coordinates
+generateTentCoords(_, _, _, 0, []).
+generateTentCoords(Board, TreeCoords, KnownTentCoords, NumTents, [(Line, Col)|RestTentCoords]):-
+    NumTents > 0,
+    validCoord(Board, KnownTentCoords, TreeCoords, (Line, Col)),
+    NewNumTents is NumTents - 1,
+    append(KnownTentCoords, [(Line, Col)], NewKnownTentCoords),
+    generateTentCoords(Board, TreeCoords, NewKnownTentCoords, NewNumTents, RestTentCoords).
 
+% Prolog Trial and error Solving Function
+resolve(P):-
+    P = (Board,_,_),
+    applyStrategiesController(P),
+    todasCelulas(Board,TreeCoords,a),
+    todasCelulas(Board,KnownTentCoords,t),
+    % Get size of Tree coordinates
+    length(TreeCoords, NumTrees),
+    % Generate the unknown tent coordinates
+    generateTentCoords(Board, TreeCoords, KnownTentCoords, NumTrees, UnknownTentCoords),
+    append(UnknownTentCoords, KnownTentCoords, TentCoords),
+    length(TentCoords, NumTrees),
+    % Sort the tent coordinates
+    sort(TentCoords, SortedTentCoords),
+    writeln(TentCoords),  % Print out the full list of tent coordinates
+    writeln(SortedTentCoords),  % Print out the full list of tent coordinates
+    % Validate
+    valida(TreeCoords, TentCoords),
+    maplist(insereObjectoCelula(Board,t),TentCoords),
+    relva(P).
+
+start:- puzzle(6-13, P),
+resolve(P), write(P).

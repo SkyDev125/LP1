@@ -1,11 +1,5 @@
 :- consult("TendasEArvores").
 
-% Helper predicate to count the number of variables in a nested list
-count_vars(List, Count) :-
-    flatten(List, FlatList),
-    include(var, FlatList, Vars),
-    length(Vars, Count).
-
 % Test for vizinhanca/2
 :- begin_tests(vizinhanca).
 test(vizinhanca_1) :-
@@ -137,7 +131,8 @@ test(insereObjectoEntrePosicoes_1) :-
 test(relva_1) :-
     puzzle(6-14, P),
     relva(P),
-    count_vars(P, CountAfter),
+    P = (Board, _, _),
+    count_vars(Board, CountAfter),
     Expected = (
             [
                 [X, a, Y, a, Z, r],
@@ -150,7 +145,8 @@ test(relva_1) :-
             [3, 0, 1, 1, 1, 1],
             [2, 1, 1, 1, 2, 0]
         ),
-    count_vars(Expected, ExpectedCount),
+    Expected = (ExpectedBoard, _, _),
+    count_vars(ExpectedBoard, ExpectedCount),
     assertion(P = Expected),
     assertion(maplist(var, [X, Y, Z, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, U])),
     assertion(CountAfter =:= ExpectedCount).
@@ -184,7 +180,8 @@ test(aproveita_1) :-
     puzzle(6-14, P),
     relva(P),
     aproveita(P),
-    count_vars(P, CountAfter),
+    P = (Board, _, _),
+    count_vars(Board, CountAfter),
     Expected = (
             [
                 [t, a, t, a, t, r],
@@ -197,7 +194,8 @@ test(aproveita_1) :-
             [3, 0, 1, 1, 1, 1],
             [2, 1, 1, 1, 2, 0]
         ),
-    count_vars(Expected, ExpectedCount),
+    Expected = (ExpectedBoard, _, _),
+    count_vars(ExpectedBoard, ExpectedCount),
     assertion(P = Expected),
     assertion(maplist(var, [X, Y, Z, W, V, U, T, S, R, Q, E, O, N, M, L, K])),
     assertion(CountAfter =:= ExpectedCount).
@@ -212,7 +210,8 @@ test(unicaHipotese_1) :-
     aproveita(P),
     relva(P),
     unicaHipotese(P),
-    count_vars(P, CountAfter),
+    P = (Board, _, _),
+    count_vars(Board, CountAfter),
     Expected = (
             [
                 [t, a, t, a, t, r],
@@ -225,7 +224,8 @@ test(unicaHipotese_1) :-
             [3, 0, 1, 1, 1, 1],
             [2, 1, 1, 1, 2, 0]
         ),
-    count_vars(Expected, ExpectedCount),
+    Expected = (ExpectedBoard, _, _),
+    count_vars(ExpectedBoard, ExpectedCount),
     assertion(P = Expected),
     assertion(maplist(var, [X, Y, Z, W, V, U, F, S, R, Q, L, O])),
     assertion(CountAfter =:= ExpectedCount).
@@ -241,7 +241,8 @@ test(limpaVizinhancas_1) :-
     relva(P),
     unicaHipotese(P),
     limpaVizinhancas(P),
-    count_vars(P, CountAfter),
+    P = (Board, _, _),
+    count_vars(Board, CountAfter),
     Expected = (
             [
                 [t, a, t, a, t, r],
@@ -254,7 +255,8 @@ test(limpaVizinhancas_1) :-
             [3, 0, 1, 1, 1, 1],
             [2, 1, 1, 1, 2, 0]
         ),
-    count_vars(Expected, ExpectedCount),
+    Expected = (ExpectedBoard, _, _),
+    count_vars(ExpectedBoard, ExpectedCount),
     assertion(P = Expected),
     assertion(maplist(var, [X, Y, Z, A, B, C, D])),
     assertion(CountAfter =:= ExpectedCount).
@@ -284,7 +286,8 @@ test(puzzle_6_13) :-
 test(puzzle_6_14) :-
     puzzle(6-14, P),
     resolve(P),
-    count_vars(P, CountAfter),
+    P = (Board, _, _),
+    count_vars(Board, CountAfter),
     Expected = (
             [
                 [t, a, t, a, t, r],
@@ -297,7 +300,8 @@ test(puzzle_6_14) :-
             [3, 0, 1, 1, 1, 1],
             [2, 1, 1, 1, 2, 0]
         ),
-    count_vars(Expected, ExpectedCount),
+    Expected = (ExpectedBoard, _, _),
+    count_vars(ExpectedBoard, ExpectedCount),
     assertion(P = Expected),
     assertion(CountAfter =:= ExpectedCount).
 
