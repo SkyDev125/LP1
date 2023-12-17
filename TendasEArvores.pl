@@ -280,7 +280,7 @@ applyStrategiesController(P):-
     applyStrategiesController(P)).
 
 
-/* Vizinhança */
+/* Vizinhanca */
 
 % Get the neighboorhood of the coordinate.
 %
