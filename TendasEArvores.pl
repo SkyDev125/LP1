@@ -177,8 +177,10 @@ checkSingularParity([],Tents, [], Tents):-!.
 %
 % (Checks if a tree has only one tent associated with it).
 checkSingularParity([Tree|Trees], Tents, RemainingTrees, RemainingTents):-
+    % Remove neighbours from Tents
     vizinhanca(Tree, TreeNeigh),
     removeFromList(Tents,TreeNeigh,LeftOverTents),
+    % Verify if only one Tent was removed with this (remove tent-tree pair).
     length(Tents, TentsAmmount),
     length(LeftOverTents, LeftOverAmmount),
     TentsAmmount-1 =:= LeftOverAmmount,
@@ -208,6 +210,32 @@ applyStrategies(P):-
     aproveita(P),
     unicaHipotese(P),
     limpaVizinhancas(P).
+
+/* Generative Functions */
+
+% Recursive predicate to generate tent coordinates.
+generateTentCoords(_, 0, _, []).
+generateTentCoords(KnownTentCoords, NumTents, PossibleCoords, [(Line, Col)|RestTentCoords]):-
+    % Only Generate the Num of coords required.
+    NumTents > 0,
+    % Get a valid Coord.
+    validCoord(KnownTentCoords, PossibleCoords, (Line, Col)),
+    NewNumTents is NumTents - 1,
+    append(KnownTentCoords, [(Line, Col)], NewKnownTentCoords),
+    generateTentCoords(NewKnownTentCoords, NewNumTents, PossibleCoords, RestTentCoords).
+
+% Generate a single valid coordinate.
+validCoord(KnownTentCoords, PossibleCoords, (X, Y)) :-
+    % Check if it is in the list of possible coordinates.
+    member((X, Y), PossibleCoords),
+    % Check if it isnt a member already known.
+    \+ member((X, Y), KnownTentCoords),
+    % Check if it is not in the extended neighborhood of any other tent.
+    \+ (
+        member((TentX, TentY), KnownTentCoords),
+        vizinhancaAlargada((TentX, TentY), ExtendedNeighbors),
+        member((X, Y), ExtendedNeighbors)
+    ).
 
 
 /* Function Controllers for Recursions */
@@ -486,32 +514,13 @@ valida(TreesList, TentsList):-
     length(RemainingTrees, RemainingTreesAmmount),
     length(RemainingTents, RemainingTentsAmmount),
     RemainingTreesAmmount =:= 0,
-    RemainingTentsAmmount =:= 0.
+    RemainingTentsAmmount =:= 0,
+    !.
 
-% Generate a single valid coordinate.
-validCoord(KnownTentCoords, PossibleCoords, (X, Y)) :-
-    % Check if it is in the list of possible coordinates.
-    member((X, Y), PossibleCoords),
-    % Check if it isnt a member already known.
-    \+ member((X, Y), KnownTentCoords),
-    % Check if it is not in the extended neighborhood of any other tent.
-    \+ (
-        member((TentX, TentY), KnownTentCoords),
-        vizinhancaAlargada((TentX, TentY), ExtendedNeighbors),
-        member((X, Y), ExtendedNeighbors)
-    ).
-
-% Recursive predicate to generate tent coordinates
-generateTentCoords(_, 0, _, []).
-generateTentCoords(KnownTentCoords, NumTents, PossibleCoords, [(Line, Col)|RestTentCoords]):-
-    NumTents > 0,
-    validCoord(KnownTentCoords, PossibleCoords, (Line, Col)),
-    NewNumTents is NumTents - 1,
-    append(KnownTentCoords, [(Line, Col)], NewKnownTentCoords),
-    generateTentCoords(NewKnownTentCoords, NewNumTents, PossibleCoords, RestTentCoords).
 
 % Prolog Trial and error Solving Function
 resolve(P):-
+    % Apply All the strategies and get the coordinates of all elements.
     P = (Board,ExpectedLineCounts,ExpectedColCounts),
     applyStrategiesController(P),
     todasCelulas(Board,TreeCoords,a),
@@ -524,25 +533,13 @@ resolve(P):-
     % Generate the unknown tent coordinates
     generateTentCoords(KnownTentCoords, TentNum, PossibleCoords, TentCoords),
     append(KnownTentCoords,TentCoords,TentCoordstest),
-    writeln(TentCoordstest),  % Print out the full list of tent coordinates
-    % Validate
-    %valida(TreeCoords, TentCoords),
+    % Insert the tents on the board.
     maplist(insereObjectoCelula(Board,t),TentCoordstest),
+    % Check if the puzzle is solved
     calculaObjectosTabuleiro(Board, LineCounts, ColCounts, t),
     LineCounts == ExpectedLineCounts,
     ColCounts == ExpectedColCounts,
     valida(TreeCoords,TentCoordstest),
-    relva(P).
-
-start:- P = (
-    [
-        [a,_,_,_,_,_],
-        [_,_,_,a,_,a],
-        [a,_,_,_,_,_],
-        [a,_,_,_,a,_],
-        [_,a,_,_,_,_],
-        [_,_,_,a,_,_]
-    ],
-    [2,0,2,1,2,1],
-    [1,2,1,1,1,2]),
-resolve(P), write(P).
+    % Fill the rest with Grass to finish it.
+    relva(P),
+    !.
