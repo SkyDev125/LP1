@@ -32,6 +32,7 @@ puzzle(8-1,
 [_, _, _, a, _, _, _, _]],
 [4, 0, 1, 2, 1, 3, 0, 2], [2, 0, 2, 2, 2, 2, 1, 2])).
 
+
 % Exemplos do enunciado - solucao dos puzzles
 
 sol(6-13, ([[t,r,r,r,a,t],

@@ -266,14 +266,41 @@ test(limpaVizinhancas_1) :-
 % Test for valida/2
 :- begin_tests(valida).
 test(valida_1) :-
-    ValidPositions = [(1,2),(1,4),(2,1),(4,3),(4,4),(6,2),(6,5)],
-    InvalidPositions = [(1,1),(1,3),(1,5),(3,4),(4,2),(5,5),(6,1)],
-    assertion(valida(ValidPositions, InvalidPositions)).
+    Trees = [(1,2),(1,4),(2,1),(4,3),(4,4),(6,2),(6,5)],
+    Tents = [(1,1),(1,3),(1,5),(3,4),(4,2),(5,5),(6,1)],
+    assertion(valida(Trees, Tents)).
 
 test(valida_2) :-
-    ValidPositions = [(1,1),(1,3)],
-    InvalidPositions = [(1,2),(1,4)],
-    assertion(valida(ValidPositions, InvalidPositions)).
+    Trees = [(1,1),(1,3)],
+    Tents = [(1,2),(1,4)],
+    assertion(valida(Trees, Tents)).
+
+test(valida_3) :-
+    Trees = [(1,2),(1,4),(2,1),(3,4),(4,1),(4,3)],
+    Tents = [(1,1),(1,3),(2,4),(3,1),(4,2),(4,4)],
+    assertion(valida(Trees, Tents)).
+
+test(valida_4) :-
+    Trees = [
+                (1,2),(1,4),(1,6),
+                (2,1),(2,7),
+                (3,4),
+                (4,1),(4,3),(4,5),(4,7),
+                (5,4),
+                (6,1),(6,7),
+                (7,2),(7,4),(7,6)
+            ],
+    Tents = [
+                (1,1),(1,3),(1,5),(1,7),
+
+                (3,1),(3,3),(3,5),(3,7),
+                (4,2),
+                (5,1),(5,5),(5,7),
+
+                (7,1),(7,3),(7,5),(7,7)
+            ],
+    assertion(valida(Trees, Tents)).
+
 
 :- end_tests(valida).
 

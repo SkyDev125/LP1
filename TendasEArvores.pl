@@ -99,6 +99,17 @@ pairLists(L1,L2,Pairs):-
         Pairs    
     ).
 
+% Intersect the values between two lists.
+intersection(L1,L2,Intersections):-
+    findall(
+        Intersection,
+        (
+            nth1(_,L1,Intersection),
+            nth1(_,L2,Intersection)
+        ),
+        Duplicates
+    ),
+    sort(Duplicates, Intersections).
 
 /* Filtering Functions */
 
@@ -254,10 +265,16 @@ checkSingularParityController(Trees, Tents, RemainingTrees, RemainingTents):-
 % End Clause for the controller, so it saves the values in the variables.
 checkSingularParityController(Trees, Tents, RemainingTrees, RemainingTents):-
     checkSingularParity(Trees, Tents, LeftOverTrees, LeftOverTents),
-    Trees == LeftOverTrees,
-    Tents == LeftOverTents,
-    RemainingTrees = LeftOverTrees,
-    RemainingTents = LeftOverTents,
+    % Check if the outputs are the same as inputs
+    sort(LeftOverTrees, SortedLeftOverTrees),
+    sort(LeftOverTents, SortedLeftOverTents),
+    sort(Trees, SortedTrees),
+    sort(Tents, SortedTents),
+    SortedTrees == SortedLeftOverTrees,
+    SortedTents == SortedLeftOverTents,
+    % Save the Leftovers
+    RemainingTrees = SortedLeftOverTrees,
+    RemainingTents = SortedLeftOverTents,
     !.
 
 % Controller function for ApplyStrategies, so it stops once it stagnates.
@@ -500,7 +517,6 @@ unicaHipotese((Board, _, _)):-
 
 /* Final Functions */
 
-% Verify if each tree has only one tent associated with it.
 valida(TreesList, TentsList):-
     % Check the size of lists to make sure theres a 1-1 relationship.
     length(TreesList,TreesAmmount),
@@ -508,12 +524,19 @@ valida(TreesList, TentsList):-
     TreesAmmount =:= TentsAmmount,
     % Remove the tree-tent pairs from the list that are unique.
     checkSingularParityController(TreesList,TentsList,RemainingTrees,RemainingTents),
-    % Check if there are no remaining Trees or Tents.
-    length(RemainingTrees, RemainingTreesAmmount),
-    length(RemainingTents, RemainingTentsAmmount),
-    RemainingTreesAmmount =:= 0,
-    RemainingTentsAmmount =:= 0,
-    !.
+    % Check if the remaining lists are empty and succeed
+    ((RemainingTrees = [], RemainingTents = []) ;
+    % Else Check if the remaining coordinates are a circular chain
+    % Remove the first tree and a tent from its neigbourhood
+    % To tests if it is a circular chain
+    RemainingTrees = [FirstTree|LeftOverTrees],
+    vizinhanca((FirstTree), TreeNeigh),
+    intersection(TreeNeigh, RemainingTents, [FirstTent|_]),
+    removeFromList(RemainingTents, [FirstTent], LeftOverTents),
+    checkSingularParityController(LeftOverTrees, LeftOverTents, FinalTrees, FinalTents),
+    % If there are still trees or tents left after removing the circular chain,
+    % the initial configuration was invalid.
+    (FinalTrees = [], FinalTents = [])).
 
 % Prolog Trial and error Solving Function
 resolve(P):-
