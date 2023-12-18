@@ -287,14 +287,14 @@ checkCircularChainController(TreesList,TentsList):-
     % Else Check if the remaining coordinates are a circular chain
     % Remove the first tree and a tent from its neighborhood
     % And try again till stagnate
-    RemainingTrees = [FirstTree|LeftOverTrees],
+    (RemainingTrees = [FirstTree|LeftOverTrees],
     vizinhanca((FirstTree), TreeNeigh),
     intersection(TreeNeigh, RemainingTents, [FirstTent|_]),
     removeFromList(RemainingTents, [FirstTent], LeftOverTents),
     checkSingularParityController(LeftOverTrees, LeftOverTents, FinalTrees, FinalTents),
     % Exit if it stagnates
     \+ (LeftOverTrees == FinalTrees, LeftOverTents == FinalTents),
-    checkCircularChainController(FinalTrees,FinalTents)).
+    checkCircularChainController(FinalTrees,FinalTents))).
 
 
 % Controller function for ApplyStrategies, so it stops once it stagnates.
