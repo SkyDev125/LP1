@@ -1,5 +1,11 @@
 :- consult("TendasEArvores").
 
+% Helper predicate to count the number of variables in a nested list
+count_vars(List, Count) :-
+    flatten(List, FlatList),
+    include(var, FlatList, Vars),
+    length(Vars, Count).
+
 % Test for vizinhanca/2
 :- begin_tests(vizinhanca).
 test(vizinhanca_1) :-
