@@ -231,18 +231,16 @@ validCoord(KnownTentCoords, PossibleCoords, (X, Y)) :-
 
 % Controller function for ApplyStrategies, so it stops once it stagnates.
 applyStrategiesController(P):-
-    % Create a copy of the board to verify later
-    copy_term(P, P_Copy),
-    P_Copy = (Board,_,_),
-    % Count the vars before applying strategies
+    P = (Board,_,_),
+    % Count the vars before and after strategies
     count_vars(Board, CountBefore),
     applyStrategies(P),
-    % Check if P can unify with P_Copy (it will most likely, due to "_" being in empty)
-    % So check if after unifying, the amount of variables is different,
-    % Meaning the board Didn't stagnate yet, and we can reapply strategies.
-    (P = P_Copy, count_vars(Board, CountAfter), CountBefore =:= CountAfter;
-    % If the above is false, this occurs.
-    applyStrategiesController(P)).
+    count_vars(Board, CountAfter),
+    % Evaluate if the puzzle stagnated by checking the vars amount.
+    (
+        (CountBefore =:= CountAfter); 
+        (applyStrategiesController(P))
+    ).
 
 
 /* Vizinhanca */
