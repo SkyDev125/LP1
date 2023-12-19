@@ -343,6 +343,9 @@ test(valida_8) :-
     Tents = [(1,1),(1,3),(3,1),(3,3)],
     assertion(valida(Trees, Tents)).
 
+test(valida_9) :-
+    assertion(\+ valida([(1, 1), (1, 2)], [(1, 1), (1, 2)])).
+
 :- end_tests(valida).
 
 :- begin_tests(puzzle).

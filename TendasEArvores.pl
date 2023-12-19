@@ -472,6 +472,9 @@ valida(TreesList, TentsList):-
     length(TreesList,TreesAmount),
     length(TentsList, TentsAmount),
     TreesAmount =:= TentsAmount,
+    % Check if there are no intersections between the trees and tents.
+    intersection(TreesList,TentsList,Intersections),
+    Intersections == [],
     % get all neighbors of trees
     findall(TreeNeighs, (member(Tree,TreesList), vizinhanca(Tree,TreeNeighs)), TreesNeighs),
     % get all neighbors of tents
