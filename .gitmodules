@@ -1,0 +1,3 @@
+[submodule "LP-UnitTests"]
+	path = LP-UnitTests
+	url = https://github.com/SkyDev125/LP-UnitTests.git
