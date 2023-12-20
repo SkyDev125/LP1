@@ -191,10 +191,7 @@ insereObjectoEntrePosicoesAux(Board, Occupation, [StartCoord,EndCoord]) :-
 
 % Apply All strategies
 applyStrategies(P):-
-    % Get the board for inacessiveis to work
-    P = (Board,_,_),
     relva(P),
-    inacessiveis(Board),
     aproveita(P),
     unicaHipotese(P),
     limpaVizinhancas(P).
@@ -240,7 +237,7 @@ applyStrategiesController(P):-
     (
         (CountBefore =:= CountAfter); 
         (applyStrategiesController(P))
-    ).
+    ),!.
 
 
 /* Vizinhanca */
@@ -495,27 +492,37 @@ valida(TreesList, TentsList):-
 
 % Prolog Trial and error Solving Function
 resolve(P):-
-    % Apply All the strategies and get the coordinates of all elements.
     P = (Board,ExpectedLineCounts,ExpectedColCounts),
-    applyStrategiesController(P),
-    todasCelulas(Board,TreeCoords,a),
-    todasCelulas(Board,KnownTentCoords,t),
-    todasCelulas(Board,PossibleCoords,_),
-    % Get size of Tree coordinates
-    length(TreeCoords, NumTrees),
-    length(KnownTentCoords, NumKnownTents),
-    TentNum is NumTrees - NumKnownTents,
-    % Generate the unknown tent coordinates
-    generateTentCoords(KnownTentCoords, TentNum, PossibleCoords, TentCoords),
-    append(KnownTentCoords,TentCoords,TentCoordstest),
-    % Insert the tents on the board.
-    maplist(insereObjectoCelula(Board,t),TentCoordstest),
+    inacessiveis(Board),
+    tryTent(P),
     % Check if the puzzle is solved
     calculaObjectosTabuleiro(Board, LineCounts, ColCounts, t),
     LineCounts == ExpectedLineCounts,
     ColCounts == ExpectedColCounts,
+    todasCelulas(Board,TreeCoords,a),
+    todasCelulas(Board,TentCoordstest,t),
     valida(TreeCoords,TentCoordstest),
-    % Fill the rest with Grass to finish it.
-    relva(P),
     % Prevent Backtracking.
     !.
+
+tryTent(P):-
+    % Apply All the strategies and get the coordinates of all elements.
+    P = (Board,_,_),
+    writeln(Board),
+    applyStrategiesController(P),
+    % Get all Possible Coordinates
+    todasCelulas(Board,PossibleCoords,_),
+    % If there are no possible coordinates left, return true.
+    ( 
+        (length(PossibleCoords, PossibleCoordsAmount), PossibleCoordsAmount =:= 0) -> true
+    ; 
+        % Apply a tent, and let prolog try all possibilities
+        (
+            member(Coord, PossibleCoords),
+            insereObjectoCelula(Board, t, Coord),
+            tryTent(P) % Recurse with the updated P
+        )
+    ).
+
+start:- puzzle(6-13, P),
+resolve(P), write(P).
