@@ -481,6 +481,7 @@ resolve(P):-
     % Prevent Backtracking.
     !.
 
+% Try placing tents, and strategies to solve the puzzle.
 tryTent(P):-
     % Apply All the strategies and get the coordinates of all elements.
     P = (Board,_,_),
