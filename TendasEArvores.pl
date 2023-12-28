@@ -79,6 +79,7 @@ sum_lists(L1, L2, Values):-
         Values
     ).
 
+
 % Remove List2 elements from List1.
 removeFromList(List1, List2, FilteredList):-
     findall(
@@ -117,6 +118,7 @@ intersection(L1, L2, Intersections):-
     ),
     % Make sure the intersections are sorted.
     sort(Duplicates, Intersections).
+
 
 /* Filtering Functions */
 
